@@ -729,6 +729,152 @@ class Categories:
         except:
             conn.rollback()
 
+class Cart:
+    def __init__(self, customer_id, product_id, picture_name, product_name, quantity, total_price):
+        self.customer_id = customer_id
+        self.product_id = product_id
+        self.picture_name = picture_name
+        self.product_name = product_name
+        self.quantity = quantity
+        self.total_price = total_price
+
+    def create(customer_id, product_id, picture_name, product_name, quantity, total_price):
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            query = "INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, TotalPrice) VALUES (%s, %s, %s, %s, %s, %s)"
+           
+            values = (customer_id, product_id, picture_name, product_name, quantity, total_price)
+
+            cursor.execute(query, values)
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+
+            return True  
+
+        except:
+           conn.rollback()
+
+    def read_by_customer_id(customer_id):
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            query = "SELECT * FROM Cart WHERE CustomerID = %s"
+            values = (customer_id)
+
+            cursor.execute(query, values)
+            row = cursor.fetchone()
+            
+            cursor.close()
+            conn.close()
+
+            if row:
+                return Cart(*row)
+            else:
+                return None
+              
+
+        except:
+           conn.rollback()
+    def read_all():
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            query = "SELECT * FROM Cart"
+            cursor.execute(query)
+
+            rows = cursor.fetchall()
+
+            cursor.close()
+            conn.close()
+
+            if rows:
+                return Cart(*rows)
+            else:
+                return None
+            
+        except:
+            conn.rollback()
+
+    def update_quantity(self):
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            query = "UPDATE Cart SET Quantity = %s WHERE ProductID = %s"
+            values = (self.quantity, self.product_id)
+
+            cursor.execute(query, values)
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+
+            return True  
+
+        except:
+            conn.rollback()
+
+    def delete_by_id(self):
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            query = "DELETE FROM Cart WHERE ProductID = %s"
+            values = (self.product_id)
+
+            cursor.execute(query, values)
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+
+            return True 
+
+        except:
+            conn.rollback()  
+
+    def delete_all():
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            query = "DELETE FROM Cart"
+
+            cursor.execute(query)
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+
+            return True 
+
+        except:
+            conn.rollback()
+
+    def reset_identity_column():
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM Cart")
+            conn.commit()
+
+            cursor.execute("DBCC CHECKIDENT ('Cart', RESEED, 0)")
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+
+            return True  
+
+        except:
+            conn.rollback()    
 
 create_customers = [
     ('johndoe', 'John Doe', 'password1', 'john@example.com', '123 Main St', '1234567890'),
@@ -820,3 +966,5 @@ order_details = [
 
 
 
+#Orders.reset_identity_column()
+#Cart.reset_identity_column()

@@ -6,6 +6,7 @@
     font-family: Georgia;
     width: 100%;
     padding: 10px 0px;
+    text-decoration: none;
 }
 .product_name{
   color: dodgerblue;
@@ -22,10 +23,11 @@
   display: block;
 }
 .welcome{
-  width: 200px;
+  width: 150px;
   height: 10px;
   float:right;
   display: block;
+  font-size: 16px;
 }
 .navbar {
   display:inline-block; 
@@ -150,4 +152,19 @@
   text-align: left;
   border: 1px solid black;
   margin: 100px;
+}
+
+.account{
+  width: 150px;
+  height: 10px;
+  float:right;
+  display: block;
+  text-align: center;
+  padding:13px;
+}
+
+a.header-link {
+  text-decoration: none;
+  display: block;
+  width: 100%;
 }
