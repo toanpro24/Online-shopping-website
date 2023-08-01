@@ -15,23 +15,24 @@ cursor = conn.cursor()
 
 class Server(BaseHTTPRequestHandler):
     def do_login(self, username):
+     ##-------###
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(days=7)
-        
+
+        # Create the cookie object and set its properties
         cookie = http.cookies.SimpleCookie()
         cookie['remembered_username'] = username
         cookie['remembered_username']['expires'] = expiration_date.strftime('%a, %d %b %Y %H:%M:%S GMT')
-        self.path = '/index3.html'
+        self.send_response(200)
         self.send_header('Set-Cookie', cookie.output(header=''))
         self.end_headers()
+        ##------###
         
 
     def do_home_page(self):
-        cookie_header = self.headers.get('Set-Cookie')
-        print(cookie_header)
+        cookie_header = http.cookies.SimpleCookie(self.headers.get('Cookie'))
         if cookie_header:
             cookies = http.cookies.SimpleCookie()
             cookies.load(cookie_header)
-            print(cookies)
             if 'remembered_username' in cookies:
                 self.path = '/index3.html'
                 return cookies
@@ -44,9 +45,8 @@ class Server(BaseHTTPRequestHandler):
         try:
             split_path = os.path.splitext(self.path)
             request_extension = split_path[1]
-            print(self.path)
             if request_extension != ".py":
-                if '/index.html' or '/main.css' in self.path:
+                if ('/index.html' or '/main.css' in self.path) and '/index3.html' not in self.path:
                     cursor.execute("SELECT * FROM Categories")
                     categories_data = cursor.fetchall()
 
@@ -101,7 +101,10 @@ class Server(BaseHTTPRequestHandler):
                                                                 <p>${chosen_product[4]}</p>
                                                             """
                             if chosen_product[6] > 0:
-                                chosen_product_html += f"<p>In stock</p><button class='add-to-cart-btn'>Add to Cart</button></div></div>"
+                                chosen_product_html += f'''<p>In stock</p><button class='add-to-cart-btn' 
+                                                        data-product-name = 'Product{chosen_product[2]}' 
+                                                        data-product-price = '{chosen_product[4]}' 
+                                                        data-product-id = 'product{chosen_product[0]}'>Add to Cart</button></div></div>'''
                             else:
                                 chosen_product_html += f"<p>Out of stock</p></div></div>"
                             modified_html_content = table_html + chosen_product_html
@@ -139,21 +142,21 @@ class Server(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(bytes(modified_html_content, 'utf-8'))
 
-                elif '/index3.html' or '/main.css' in self.path:
-                    username = cookies['remembered_username']
+                elif ('/index3.html' or '/main.css' in self.path) and '/index.html' not in self.path:
+                    with open('index3.html', 'r') as f:
+                        html_content = f.read()
+
+                    username = cookies['remembered_username'].value
                     welcome_message = "<div class = 'welcome'>"
                     welcome_message += f"<p style = 'color:white' 'font-size:20px'>Welcome back {username}</p></div>"
                     
                     html_content = html_content.replace('<div id = "welcome"></div>', welcome_message)
                     modified_html_content = html_content.replace('<div id="link-container"></div>', self.get_data_html())
                     self.send_response(200)
-                    content_length = len(modified_html_content.encode('utf-8'))
-                    self.send_header('Content-Length', str(content_length))
                     self.end_headers()
-                    try:
-                        self.wfile.write(bytes(modified_html_content, 'utf-8'))
-                    except ConnectionAbortedError:
-                        pass
+                    self.wfile.write(bytes(modified_html_content, 'utf-8'))
+                
+                
             else:
                 f = "File not found"
                 self.send_error(404,f)
@@ -171,13 +174,7 @@ class Server(BaseHTTPRequestHandler):
         if form_data != {}:
             username = form_data['username'][0]
             password = form_data['password'][0]
-            # cookie = cookies.SimpleCookie()
-            # cookie['remembered_username'] = username
-            # current_time = datetime.now()
-            # expiration_time = current_time + timedelta(days=7)
-            # formatted_expiration_time = expiration_time.strftime('%a, %d %b %Y %H:%M:%S GMT')
-            # cookie['remembered_username']['expires'] = formatted_expiration_time
-            # print(cookie.output())
+            
         else:
             return
             
@@ -187,18 +184,16 @@ class Server(BaseHTTPRequestHandler):
 
         if customer:
             self.do_login(username)
-            with open(self.path[1:], 'r') as f:
+
+            with open('index3.html', 'r') as f:
                 html_content = f.read()
-            welcome_message = "<div class = 'welcome'>"
-            welcome_message += f"<p style = 'color:white' 'font-size:20px'>Welcome back {username}</p></div>"
+               
+            welcome_message = '<div class = "welcome">'
+            welcome_message += f'<p style = "color:red" "font-size:20px">Welcome back {username}</p></div>'
             
             html_content = html_content.replace('<div id = "welcome"></div>', welcome_message)
             modified_html_content = html_content.replace('<div id="link-container"></div>', self.get_data_html())
-
-            self.send_response(200)
-            self.end_headers()
-            modified_html_content = '<p/>'
-            self.wfile.write(bytes(modified_html_content, 'utf-8'))
+            self.wfile.write(bytes(modified_html_content, encoding='utf-8'))
             return
         else:
             self.send_response(401)
