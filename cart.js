@@ -1,65 +1,65 @@
-// function displayCartItems() {
-    // let cart = JSON.parse(getCookie("cartdetail")) || []; // Provide an empty array if the cart is not available
+function displayCartItems() {
+    let cart = JSON.parse(getCookie("cartdetail")) || []; 
 
-    // console.log('Cart-data', cart);
+    console.log('Cart-data', cart);
 
-    // let cartItemsList = document.getElementById('cart-items');
-    // let totalPriceElement = document.getElementById('total-price');
-    // let totalPrice = 0;
+    let cartItemsList = document.getElementById('cart-items');
+    let totalPriceElement = document.getElementById('total-price');
+    let totalPrice = 0;
 
-    // cartItemsList.innerHTML = '';
+    cartItemsList.innerHTML = '';
 
-    // if (Array.isArray(cart)) { // Check if cart is an array before using forEach
-    //     cart.forEach((item, index) => {
-    //         let total = item.price * item.quantity;
-    //         totalPrice += total;
-    //         let tableRow = document.createElement('tr');
-    //         tableRow.innerHTML = `
-    //             <td>${index + 1}</td>
-    //             <td><img src="${item.picture}"></td>
-    //             <td>${item.name} <input type="button" value="Delete" onclick="deleteRow(this)"></td>
-    //             <td>
-    //                 <select onchange="updateQuantity(${index}, this.value)">${generateQuantityOptions(item.quantity)}</select>
-    //             </td>
-    //             <td class="total-price-cell">$${total.toFixed(2)}</td>
-    //         `;
-    //         cartItemsList.appendChild(tableRow);
-    //     });
-    // } else {
-    //     console.log('Cart data is not an array.'); 
-    // }
+    if (Array.isArray(cart)) { 
+        cart.forEach((item, index) => {
+            let total = item.price * item.quantity;
+            totalPrice += total;
+            let tableRow = document.createElement('tr');
+            tableRow.innerHTML = `
+                <td>${index + 1}</td>
+                <td><img src="${item.picture}"></td>
+                <td>${item.name} <input type="button" value="Delete" onclick="deleteRow(this)"></td>
+                <td>
+                    <select onchange="updateQuantity(${index}, this.value)">${generateQuantityOptions(item.quantity)}</select>
+                </td>
+                <td class="total-price-cell">$${total.toFixed(2)}</td>
+            `;
+            cartItemsList.appendChild(tableRow);
+        });
+    } else {
+        console.log('Cart data is not an array.'); 
+    }
 
-    // totalPriceElement.innerText = `$${totalPrice.toFixed(2)}`;
-    // let totalItems = 0;
-    // cart.forEach(item => {
-    //     totalItems += item.quantity;
-    // }); 
-    // let total_Items_Element = document.getElementById("total-items");
-    // total_Items_Element.innerText = totalItems;
+    totalPriceElement.innerText = `$${totalPrice.toFixed(2)}`;
+    let totalItems = 0;
+    cart.forEach(item => {
+        totalItems += item.quantity;
+    }); 
+    let total_Items_Element = document.getElementById("total-items");
+    total_Items_Element.innerText = totalItems;
 
-    // if (cart.length > 0) {
-    //     cartTable.style.display = "table";
-    //     emptyCartMessage.style.display = "none";
-    //     proceedToCheckoutBtn.style.display = "inline-block";
-    //   } else {
-    //     cartTable.style.display = "none";
-    //     emptyCartMessage.style.display = "block";
-    //     proceedToCheckoutBtn.style.display = "none";
-    //   }
+    if (cart.length > 0) {
+        cartTable.style.display = "table";
+        emptyCartMessage.style.display = "none";
+        proceedToCheckoutBtn.style.display = "inline-block";
+      } else {
+        cartTable.style.display = "none";
+        emptyCartMessage.style.display = "block";
+        proceedToCheckoutBtn.style.display = "none";
+      }
 
-// }
-// function generateQuantityOptions(selectedQuantity) {
+}
+function generateQuantityOptions(selectedQuantity) {
     
-//     let options = '';
-//     for (let i = 1; i <= 5; i++) {
-//         if (i === selectedQuantity) {
-//             options += `<option value="${i}" selected>${i}</option>`;
-//         } else {
-//             options += `<option value="${i}">${i}</option>`;
-//         }
-//     }
-//     return options;
-// }
+    let options = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i === selectedQuantity) {
+            options += `<option value="${i}" selected>${i}</option>`;
+        } else {
+            options += `<option value="${i}">${i}</option>`;
+        }
+    }
+    return options;
+}
 
 function updateQuantity(itemIndex, newQuantity) {
     let cart = JSON.parse(getCookie("cartdetail"));
@@ -81,7 +81,7 @@ function updateQuantity(itemIndex, newQuantity) {
     totalPriceElement.innerText = `$${totalPrice.toFixed(2)}`;
 
     setCookie("cartdetail", JSON.stringify(cart), 30);
-    
+    location.reload();
 }
 
 
@@ -93,6 +93,7 @@ function deleteRow(r) {
     setCookie("cartdetail", JSON.stringify(cart), 30); 
     location.reload();
 }
+
 function proceedToCheckout() {
     data = {};
     let username = getCookie("remembered_username");
@@ -112,6 +113,8 @@ function proceedToCheckout() {
         },
         body: JSON.stringify(data)
     })
+    document.cookie = "cookiename=cart ; expires = Thu, 01 Jan 1970 00:00:00 GMT"
+    document.cookie = "cookiename=cartdetail ; expires = Thu, 01 Jan 1970 00:00:00 GMT"
 }
 
 
@@ -146,3 +149,4 @@ function setCookie(name, value, days) {
 }
 
 
+displayCartItems();

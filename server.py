@@ -42,15 +42,15 @@ class Server(BaseHTTPRequestHandler):
                 return cookies
         self.path = '/index.html'
         
-    def generateQuantityOptions(self, selectedQuantity) :
-        options = ''
-        for i in range(1,11):
-            if (i == selectedQuantity):
-                options += f"<option value='{i}' selected>{i}</option>"
-            else:
-                options += f"<option value='{i}'>{i}</option>"
+    # def generateQuantityOptions(self, selectedQuantity) :
+    #     options = ''
+    #     for i in range(1,11):
+    #         if (i == selectedQuantity):
+    #             options += f"<option value='{i}' selected>{i}</option>"
+    #         else:
+    #             options += f"<option value='{i}'>{i}</option>"
 
-        return options
+    #     return options
     
     # def updateQuantity(itemIndex, newQuantity):
     #     cursor.execute("UPDATE Cart Set Quantity = %s WHERE ProductID = %s", (newQuantity, itemIndex))
@@ -123,31 +123,31 @@ class Server(BaseHTTPRequestHandler):
             # except Exception as e:
             #     print(f"Error sending email: {e}")
 
-        if self.path == "/cart":
-            index = 0
-            cursor.execute("SELECT * FROM Cart")
-            cart_detail = cursor.fetchall()
-            print(cart_detail)
-            cart = ""
-            for tup in cart_detail:
-                index += 1
-                cart += f'''<tr><td>{index}</td>
-                    <td><img src="{tup[2]}"></td>
-                    <td>{tup[3]} <input type="button" value="Delete" onclick="deleteRow(this)"></td>
-                    <td>
-                        <select onchange="updateQuantity({index - 1}, this.value)">{self.generateQuantityOptions(tup[4])}</select>
-                    </td>
-                    <td class="total-price-cell">${tup[6]}</td></tr>
-                '''
-            self.path = "/cart.html"
-            with open(self.path[1:], 'r') as f:
-                html_content = f.read()
-            modified_html_content = html_content.replace('<div id="cart-items"></div>', cart)
-            self.send_response(200)
-            self.end_headers()
-            self.wfile.write(bytes(modified_html_content, 'utf-8'))
+        # if self.path == "/cart":
+        #     index = 0
+        #     cursor.execute("SELECT * FROM Cart")
+        #     cart_detail = cursor.fetchall()
+        #     print(cart_detail)
+        #     cart = ""
+        #     for tup in cart_detail:
+        #         index += 1
+        #         cart += f'''<tr><td>{index}</td>
+        #             <td><img src="{tup[2]}"></td>
+        #             <td>{tup[3]} <input type="button" value="Delete" onclick="deleteRow(this)"></td>
+        #             <td>
+        #                 <select onchange="updateQuantity({index - 1}, this.value)">{self.generateQuantityOptions(tup[4])}</select>
+        #             </td>
+        #             <td class="total-price-cell">${tup[6]}</td></tr>
+        #         '''
+        #     self.path = "/cart.html"
+        #     with open(self.path[1:], 'r') as f:
+        #         html_content = f.read()
+        #     modified_html_content = html_content.replace('<div id="cart-items"></div>', cart)
+        #     self.send_response(200)
+        #     self.end_headers()
+        #     self.wfile.write(bytes(modified_html_content, 'utf-8'))
             
-            return
+        #     return
 
             
         try:
@@ -341,42 +341,42 @@ class Server(BaseHTTPRequestHandler):
     
     
     def do_POST(self):
-        if self.path == "/addtocart":
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data)
-            product_id = data.get('ProductID')
-            product_name = data.get('ProductName')
-            product_picture = data.get('PictureName')
-            product_price = data.get('ProductPrice')
-            product_quantity = data.get('Quantity')
-            username = data.get('Username')
+        # if self.path == "/addtocart":
+        #     content_length = int(self.headers['Content-Length'])
+        #     post_data = self.rfile.read(content_length)
+        #     data = json.loads(post_data)
+        #     product_id = data.get('ProductID')
+        #     product_name = data.get('ProductName')
+        #     product_picture = data.get('PictureName')
+        #     product_price = data.get('ProductPrice')
+        #     product_quantity = data.get('Quantity')
+        #     username = data.get('Username')
 
-            cursor.execute("SELECT CustomerID from Customer WHERE Username = %s", username)
-            row = cursor.fetchone()
-            customer_id = row[0]
-            product_id = int(product_id)
-            cursor.execute("SELECT * FROM Cart")
-            cart_data = cursor.fetchall()
+        #     cursor.execute("SELECT CustomerID from Customer WHERE Username = %s", username)
+        #     row = cursor.fetchone()
+        #     customer_id = row[0]
+        #     product_id = int(product_id)
+        #     cursor.execute("SELECT * FROM Cart")
+        #     cart_data = cursor.fetchall()
             
-            if cart_data:
-                for dic in cart_data:
-                    dic = list(dic)
-                    dic[1] = int(dic[1])
-                    if product_id == dic[1]:
-                        dic[4] += 1 
-                        subtotal_price = product_price * dic[4]
-                        cursor.execute("UPDATE Cart SET Quantity = %s, SubtotalPrice = %s WHERE ProductID = %s", (dic[4], subtotal_price, product_id))
-                        conn.commit()
-                        return
-                product_quantity = 1
-                cursor.execute("INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, Price, SubtotalPrice) VALUES(%s, %s, %s, %s, %s, %s, %s)", (customer_id, product_id, product_picture, product_name, product_quantity, product_price, product_price))
-                conn.commit()
-                return
-            else:
-                cursor.execute("INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, Price, SubtotalPrice) VALUES(%s, %s, %s, %s, %s, %s, %s)", (customer_id, product_id, product_picture, product_name, product_quantity, product_price, product_price))
-                conn.commit()
-                return 
+        #     if cart_data:
+        #         for dic in cart_data:
+        #             dic = list(dic)
+        #             dic[1] = int(dic[1])
+        #             if product_id == dic[1]:
+        #                 dic[4] += 1 
+        #                 subtotal_price = product_price * dic[4]
+        #                 cursor.execute("UPDATE Cart SET Quantity = %s, SubtotalPrice = %s WHERE ProductID = %s", (dic[4], subtotal_price, product_id))
+        #                 conn.commit()
+        #                 return
+        #         product_quantity = 1
+        #         cursor.execute("INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, Price, SubtotalPrice) VALUES(%s, %s, %s, %s, %s, %s, %s)", (customer_id, product_id, product_picture, product_name, product_quantity, product_price, product_price))
+        #         conn.commit()
+        #         return
+        #     else:
+        #         cursor.execute("INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, Price, SubtotalPrice) VALUES(%s, %s, %s, %s, %s, %s, %s)", (customer_id, product_id, product_picture, product_name, product_quantity, product_price, product_price))
+        #         conn.commit()
+        #         return 
 
             
         #get username and password 

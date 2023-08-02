@@ -288,7 +288,7 @@ class Orders:
             conn.rollback() 
 
 class Product:
-    def __init__(self, picture_name, product_id, product_name, description, price, category_id, quantity):
+    def __init__(self, product_id, picture_name, product_name, description, price, category_id, quantity):
         self.picture_name = picture_name
         self.product_id = product_id
         self.product_name = product_name
@@ -336,6 +336,22 @@ class Product:
                 return Product(*row)
             else:
                 return None  
+
+        except :
+            conn.rollback()
+
+    def read_all():
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT * FROM Product")
+            row = cursor.fetchall()
+
+            cursor.close()
+            conn.close()
+
+            return row
 
         except :
             conn.rollback()
@@ -612,6 +628,7 @@ class Categories:
 
         except:
            conn.rollback()
+
     def read_all():
         try:
             conn = connect_to_database()
@@ -622,22 +639,24 @@ class Categories:
 
             rows = cursor.fetchall()
 
-            for row in rows:
-                category_name = row[1]
-                description = row[2]
-                stt = row[3]
+                # for row in rows:
+                #     category_id = row[0]
+                #     category_name = row[1]
+                #     description = row[2]
+                #     stt = row[3]
 
-                category = Categories(category_name, description, stt)
-                print(f"Category name: {category.category_name}")
-                print(f"Deescription: {category.description}")
-                print(f"STT: {category.stt}")
-                print("-------------------------")
-
-            cursor.close()
-            conn.close()
-
-        except:
+                #     category = Categories(category_id, category_name, description, stt)
+                #     print(f"Category name: {category.category_name}")
+                #     print(f"Description: {category.description}")
+                #     print(f"STT: {category.stt}")
+                #     print("-------------------------")
+            return rows
+            
+        except Exception as e:
             conn.rollback()
+            print(f"Error: {str(e)}")
+
+
     def update(self):
         try:
             conn = connect_to_database()
@@ -968,3 +987,4 @@ order_details = [
 
 #Orders.reset_identity_column()
 #Cart.reset_identity_column()
+

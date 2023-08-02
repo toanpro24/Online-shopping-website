@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Product Table</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #0046be;
+        }
+
+        tr:hover {
+            background-color: #FFFFE0;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="table-container">
+        <input type="text"  id="ProductId" placeholder="Search ProductID">
+        <input type="text"  id ="ProductName" placeholder="Search Product Name">
+        <input type="text"  id="CategoryId" placeholder="Search CategoryID">
+        <input type = "submit" onclick="performSearch('ProductID', 2);" />
+        <table id = "myTable">
+            <thead>
+                <tr>
+                    <th>ProductID</th>
+                    <th>Picture</th>
+                    <th>Product name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>CategoryID</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <div id = "product_table"></div>
+            </tbody>
+        </table>
+    </div>
+    <script src="admin.js"></script>
+</body>
+
+</html>
