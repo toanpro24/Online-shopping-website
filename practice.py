@@ -288,7 +288,7 @@ class Orders:
             conn.rollback() 
 
 class Product:
-    def __init__(self, product_id, picture_name, product_name, description, price, category_id, quantity):
+    def __init__(self, product_id, picture_name, product_name, description, price, category_id, quantity, status):
         self.picture_name = picture_name
         self.product_id = product_id
         self.product_name = product_name
@@ -296,15 +296,16 @@ class Product:
         self.price = price
         self.category_id = category_id
         self.quantity = quantity
+        self.status = status
 
 
-    def create(picture_name, product_name, description, price, category_id, quantity):
+    def create(picture_name, product_name, description, price, category_id, quantity, status):
         try:
             conn = connect_to_database()
             cursor = conn.cursor()
 
-            query = "INSERT INTO Product (PictureName, ProductName, Description, Price, CategoryID, Quantity) VALUES (%s, %s, %s, %s, %s, %s)"
-            values = (picture_name, product_name, description, price, category_id, quantity)
+            query = "INSERT INTO Product (PictureName, ProductName, Description, Price, CategoryID, Quantity, Status) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            values = (picture_name, product_name, description, price, category_id, quantity, status)
 
             cursor.execute(query, values)
             conn.commit()
@@ -356,13 +357,13 @@ class Product:
         except :
             conn.rollback()
 
-    def update(self):
+    def update(product_name, description, price, category_id, quantity, product_id, status):
         try:
             conn = connect_to_database()
             cursor = conn.cursor()
 
-            query = "UPDATE Product SET ProductName = %s, Description = %s, Price = %s, CategoryID = %s, Quantity = %s WHERE ProductID = %s"
-            values = (self.product_name, self.description, self.price, self.category_id, self.quantity, self.product_id)
+            query = "UPDATE Product SET ProductName = %s, Description = %s, Price = %s, CategoryID = %s, Quantity = %s, Status = %s  WHERE ProductID = %s"
+            values = (product_name, description, price, category_id, quantity, product_id, status)
 
             cursor.execute(query, values)
             conn.commit()
@@ -375,13 +376,46 @@ class Product:
         except :
             conn.rollback()  
 
-    def delete_by_id(self):
+    def disable_status(product_id):
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            query = "UPDATE Product SET Status = 0 WHERE ProductID = %s"
+            values = (product_id)
+            
+            cursor.execute(query, values)
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+        except:
+            conn.rollback()
+
+    def activate_status(product_id):
+        try:
+            conn = connect_to_database()
+            cursor = conn.cursor()
+
+            query = "UPDATE Product SET Status = 1 WHERE ProductID = %s"
+            values = (product_id)
+            
+            cursor.execute(query, values)
+            conn.commit()
+
+            cursor.close()
+            conn.close()
+        except:
+            conn.rollback()
+    # 0: disabled
+    # 1: activated
+    def delete_by_id(product_id):
         try:
             conn = connect_to_database()
             cursor = conn.cursor()
 
             query = "DELETE FROM Product WHERE ProductID = %s"
-            values = (self.product_id,)
+            values = (product_id)
 
             cursor.execute(query, values)
             conn.commit()
@@ -928,22 +962,22 @@ categories = [
 #     category_name, description, stt = category
 #     Categories.create(category_name,description, stt)
 products = [
-    ("product1.jpg", "Men's Striped Button-Down Shirt", "This men's striped button-down shirt offers a classic and stylish look suitable for various occasions. Made from high-quality cotton fabric, it ensures comfort, breathability, and durability. The shirt features a timeless vertical stripe pattern in shades of blue and white, adding a touch of sophistication to your ensemble.", 19.99, 2, 50),
-    ("product2.jpg", "Women's Slim Fit Dark Wash Jeans", "These women's slim fit dark wash jeans are a versatile and stylish addition to any wardrobe. Crafted from premium denim fabric, these jeans offer a flattering and comfortable fit with a hint of stretch for ease of movement. The dark wash adds a touch of sophistication and pairs well with a variety of tops and shoes.", 29.99, 2, 30),
-    ("product3.jpg", " Men's Classic Canvas Sneakers", "These men's classic canvas sneakers combine style and comfort, making them a must-have footwear choice. The sneakers feature a durable canvas upper that offers breathability and a timeless look. With a lace-up closure, padded collar, and cushioned insole, these sneakers provide a snug fit and all-day comfort. The rubber outsole offers excellent traction, making them suitable for various activities and terrains. Whether you're strolling around the city or running errands, these versatile sneakers will elevate your casual style.", 59.99, 5, 20),
-    ("product4.jpg", "Women's Strappy Flat Sandals", "Step into comfort and style with these women's strappy flat sandals. Designed for warm weather and casual occasions, these sandals feature multiple crisscross straps that provide a secure and adjustable fit. The sandals are made from synthetic materials, ensuring durability and easy maintenance. The flat sole offers comfort for all-day wear, while the open-toe design keeps your feet cool. Perfect for pairing with summer dresses or shorts, these strappy flat sandals are a go-to choice for effortless style.", 24.99, 5, 15),
-    ("product5.jpg", "Men's Stainless Steel Chronograph Watch", "Add a touch of elegance and functionality to your wrist with this men's stainless steel chronograph watch. The watch showcases a sleek and masculine design with a stainless steel case and bracelet. The chronograph feature allows you to track elapsed time with precision, while the date window adds practicality. With water resistance and a reliable quartz movement, this watch is suitable for everyday wear and various activities. Make a bold statement with this sophisticated timepiece that seamlessly blends style and functionality.", 79.99, 10, 10),
-    ("product6.jpg", "Women's Sterling Silver Charm Bracelet", "This women's sterling silver charm bracelet is a charming accessory that complements any outfit. Crafted from high-quality sterling silver, the bracelet features a link chain with various dangling charms. The adjustable length ensures a comfortable fit, and the lobster clasp provides secure closure. The intricate details and polished finish add a touch of elegance, making this bracelet a versatile piece for both casual and formal occasions. Express your personal style and capture attention with this beautiful sterling silver charm bracelet.", 12.99, 10, 25),
-    ("product7.jpg", "Unisex Water-Resistant Laptop Backpack", "Stay organized and carry your essentials in style with this unisex water-resistant laptop backpack. The backpack is made from durable nylon material that offers water resistance, protecting your belongings in light rain or accidental spills. With multiple compartments and pockets, including a padded laptop sleeve, it provides ample storage and organization options. The adjustable shoulder straps and back padding ensure comfortable carrying, even during long commutes. Whether you're a student, professional, or traveler, this versatile backpack is designed to meet your needs while keeping your belongings safe and secure.", 39.99, 5, 10),
-    ("product8.jpg", "Protective Neoprene Laptop Sleeve", "Keep your laptop safe and secure with this protective neoprene laptop sleeve. The sleeve is designed to fit most standard laptops, providing a snug and cushioned fit. The neoprene material offers shock absorption and protects against scratches, bumps, and dust. The slim and lightweight design allows for easy transport in a bag or on its own. Whether you're commuting, traveling, or working from a café, this laptop sleeve ensures your device stays protected and adds a touch of style.", 19.99, 1, 20),
-    ("product9.jpg", "Wireless Over-Ear Noise-Canceling Headphones", "Immerse yourself in high-quality audio with these wireless over-ear noise-canceling headphones. The headphones feature advanced noise-canceling technology, reducing unwanted background noise and providing a more focused listening experience. With Bluetooth connectivity,you can enjoy wireless freedom and easily connect to your devices. The over-ear design and cushioned ear cups offer comfort for extended wear. The headphones deliver rich and immersive sound, with deep bass and crisp highs, perfect for music enthusiasts and audiophiles. With a long battery life and convenient controls, these headphones are ideal for travel, work, or leisure, allowing you to enjoy your favorite music with exceptional clarity and convenience.", 49.99, 1, 15),
-    ("product10.jpg", "Portable Bluetooth Speaker with Enhanced Bass", "Take your music wherever you go with this portable Bluetooth speaker. The speaker boasts a compact and lightweight design, making it easy to carry in your backpack or purse. Despite its size, it delivers impressive sound quality with enhanced bass, providing a rich and immersive listening experience. With Bluetooth connectivity, you can wirelessly connect your devices and stream music effortlessly. The speaker also features a built-in rechargeable battery that offers long playtime, allowing you to enjoy your favorite tunes for hours. Whether you're at a picnic, party, or beach, this portable Bluetooth speaker ensures a vibrant and enjoyable audio experience.", 29.99, 1, 10),
+    ("product1.jpg", "Men's Striped Button-Down Shirt", "This men's striped button-down shirt offers a classic and stylish look suitable for various occasions. Made from high-quality cotton fabric, it ensures comfort, breathability, and durability. The shirt features a timeless vertical stripe pattern in shades of blue and white, adding a touch of sophistication to your ensemble.", 19.99, 2, 50, 1),
+    ("product2.jpg", "Women's Slim Fit Dark Wash Jeans", "These women's slim fit dark wash jeans are a versatile and stylish addition to any wardrobe. Crafted from premium denim fabric, these jeans offer a flattering and comfortable fit with a hint of stretch for ease of movement. The dark wash adds a touch of sophistication and pairs well with a variety of tops and shoes.", 29.99, 2, 30, 1),
+    ("product3.jpg", " Men's Classic Canvas Sneakers", "These men's classic canvas sneakers combine style and comfort, making them a must-have footwear choice. The sneakers feature a durable canvas upper that offers breathability and a timeless look. With a lace-up closure, padded collar, and cushioned insole, these sneakers provide a snug fit and all-day comfort. The rubber outsole offers excellent traction, making them suitable for various activities and terrains. Whether you're strolling around the city or running errands, these versatile sneakers will elevate your casual style.", 59.99, 5, 20, 1),
+    ("product4.jpg", "Women's Strappy Flat Sandals", "Step into comfort and style with these women's strappy flat sandals. Designed for warm weather and casual occasions, these sandals feature multiple crisscross straps that provide a secure and adjustable fit. The sandals are made from synthetic materials, ensuring durability and easy maintenance. The flat sole offers comfort for all-day wear, while the open-toe design keeps your feet cool. Perfect for pairing with summer dresses or shorts, these strappy flat sandals are a go-to choice for effortless style.", 24.99, 5, 15, 1),
+    ("product5.jpg", "Men's Stainless Steel Chronograph Watch", "Add a touch of elegance and functionality to your wrist with this men's stainless steel chronograph watch. The watch showcases a sleek and masculine design with a stainless steel case and bracelet. The chronograph feature allows you to track elapsed time with precision, while the date window adds practicality. With water resistance and a reliable quartz movement, this watch is suitable for everyday wear and various activities. Make a bold statement with this sophisticated timepiece that seamlessly blends style and functionality.", 79.99, 10, 10, 1),
+    ("product6.jpg", "Women's Sterling Silver Charm Bracelet", "This women's sterling silver charm bracelet is a charming accessory that complements any outfit. Crafted from high-quality sterling silver, the bracelet features a link chain with various dangling charms. The adjustable length ensures a comfortable fit, and the lobster clasp provides secure closure. The intricate details and polished finish add a touch of elegance, making this bracelet a versatile piece for both casual and formal occasions. Express your personal style and capture attention with this beautiful sterling silver charm bracelet.", 12.99, 10, 25, 1),
+    ("product7.jpg", "Unisex Water-Resistant Laptop Backpack", "Stay organized and carry your essentials in style with this unisex water-resistant laptop backpack. The backpack is made from durable nylon material that offers water resistance, protecting your belongings in light rain or accidental spills. With multiple compartments and pockets, including a padded laptop sleeve, it provides ample storage and organization options. The adjustable shoulder straps and back padding ensure comfortable carrying, even during long commutes. Whether you're a student, professional, or traveler, this versatile backpack is designed to meet your needs while keeping your belongings safe and secure.", 39.99, 5, 10, 1),
+    ("product8.jpg", "Protective Neoprene Laptop Sleeve", "Keep your laptop safe and secure with this protective neoprene laptop sleeve. The sleeve is designed to fit most standard laptops, providing a snug and cushioned fit. The neoprene material offers shock absorption and protects against scratches, bumps, and dust. The slim and lightweight design allows for easy transport in a bag or on its own. Whether you're commuting, traveling, or working from a café, this laptop sleeve ensures your device stays protected and adds a touch of style.", 19.99, 1, 20, 1),
+    ("product9.jpg", "Wireless Over-Ear Noise-Canceling Headphones", "Immerse yourself in high-quality audio with these wireless over-ear noise-canceling headphones. The headphones feature advanced noise-canceling technology, reducing unwanted background noise and providing a more focused listening experience. With Bluetooth connectivity,you can enjoy wireless freedom and easily connect to your devices. The over-ear design and cushioned ear cups offer comfort for extended wear. The headphones deliver rich and immersive sound, with deep bass and crisp highs, perfect for music enthusiasts and audiophiles. With a long battery life and convenient controls, these headphones are ideal for travel, work, or leisure, allowing you to enjoy your favorite music with exceptional clarity and convenience.", 49.99, 1, 15, 1),
+    ("product10.jpg", "Portable Bluetooth Speaker with Enhanced Bass", "Take your music wherever you go with this portable Bluetooth speaker. The speaker boasts a compact and lightweight design, making it easy to carry in your backpack or purse. Despite its size, it delivers impressive sound quality with enhanced bass, providing a rich and immersive listening experience. With Bluetooth connectivity, you can wirelessly connect your devices and stream music effortlessly. The speaker also features a built-in rechargeable battery that offers long playtime, allowing you to enjoy your favorite tunes for hours. Whether you're at a picnic, party, or beach, this portable Bluetooth speaker ensures a vibrant and enjoyable audio experience.", 29.99, 1, 10, 1),
 ]
 
 
 # for product in products:
-#     picture_name, product_name, description, price, category_id, quantity = product
-#     Product.create(picture_name, product_name, description, price, category_id, quantity)
+#     picture_name, product_name, description, price, category_id, quantity, status = product
+#     Product.create(picture_name, product_name, description, price, category_id, quantity, status)
 
 orders = [
     (1, '2023-06-01', 50.99, 1),

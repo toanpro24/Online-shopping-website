@@ -14,6 +14,7 @@ th, td {
     padding: 8px;
     text-align: left;
     position: relative;
+    width: 10%;
 }
 
 th {
@@ -63,6 +64,14 @@ header {
 }
 .edit-button {
     background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.delete-button{
+    background-color: red;
     color: white;
     border: none;
     padding: 5px 10px;

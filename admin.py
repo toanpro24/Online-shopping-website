@@ -129,6 +129,7 @@ class Server(BaseHTTPRequestHandler):
                     <td data-column-name = 'CategoryID'>{product[5]}</td>
                     <td data-column-name = 'Quantity'>{product[6]}</td>
                     <td><button class="edit-button">Edit</button></td>
+                    <td><button class = "delete-button">Delete</button></td>
                     </tr>
                     '''
                 with open('admin_product_table.html', 'r') as f:
@@ -155,6 +156,7 @@ class Server(BaseHTTPRequestHandler):
                     <td data-column-name = 'CategoryID'>{product[5]}</td>
                     <td data-column-name = 'Quantity'>{product[6]}</td>
                     <td><button class="edit-button">Edit</button></td>
+                    <td><button class = "delete-button">Delete</button></td>
                     </tr>'''
             with open(self.path[1:], 'r') as f:
                 html_content = f.read()
@@ -186,39 +188,25 @@ class Server(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        # if self.path == "/search":
-        #     content_length = int(self.headers['Content-Length'])
-        #     post_data = self.rfile.read(content_length)
-        #     data = json.loads(post_data)
-
-        #     column = data.get('column')
-        #     search_term = data.get('searchTerm')
-        #     if column and search_term:
-        #         query = f"SELECT * FROM Product WHERE {column} LIKE {search_term}"
-        #         cursor.execute(query)
-
-        #         search_results = cursor.fetchall()
-        #         new_html = ""
-        #         for product in search_results:
-        #             new_html += f'''<tr><td>{product[0]}</td>
-        #             <td><img src="{product[1]}"></td>
-        #             <td>{product[2]}</td>
-        #             <td>{product[3]}</td>
-        #             <td>{product[4]}</td>
-        #             <td>{product[5]}</td>
-        #             <td>{product[6]}</td>
-        #             </tr>
-        #             '''
-        #         with open('admin_product_table.html', 'r') as f:
-        #             html_content = f.read()
-        #         modified_html_content = html_content.replace('<div id = "product_table"></div>', new_html)
-        #         self.send_response(200)
-        #         self.send_header('Content-Type', 'text/html')
-        #         self.end_headers()
-        #         self.wfile.write(modified_html_content.encode('utf-8'))
-        #         return
-
-
+        if self.path == "/update":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+            product_id = data.get('ProductID')
+            product_name = data.get('ProductName')
+            description = data.get('Description')
+            price = data.get('Price')
+            category_id = data.get('CategoryID')
+            quantity = data.get('Quantity')
+            practice.Product.update(product_name, description, price, category_id, quantity, product_id)
+            return
+        if self.path == "/delete":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+            product_id = data.get('ProductID')
+            practice.Product.disable_status(product_id)
+            return
         if self.path == "/login":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
@@ -249,7 +237,8 @@ class Server(BaseHTTPRequestHandler):
                     <td data-column-name = 'Price'>{product[4]}</td>
                     <td data-column-name = 'CategoryID'>{product[5]}</td>
                     <td data-column-name = 'Quantity'>{product[6]}</td>
-                    <td><button class="edit-button">Edit</button></td>
+                    <td><button class = "edit-button">Edit</button></td>
+                    <td><button class = "delete-button">Delete</button></td>
                     </tr>'''
                 with open('admin_product_table.html', 'r') as f:
                     html_content = f.read()
