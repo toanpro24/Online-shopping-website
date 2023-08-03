@@ -3,6 +3,7 @@ from http import cookies
 from http.server import BaseHTTPRequestHandler
 import os
 import practice
+import urllib.parse
 from urllib.parse import parse_qs
 from datetime import datetime, timedelta
 import datetime
@@ -12,6 +13,7 @@ from http.server import HTTPServer
 import smtplib
 from email.mime.text import MIMEText
 import json
+import sqlite3
 
 # Connect to SQL Server
 
@@ -96,28 +98,72 @@ class Server(BaseHTTPRequestHandler):
             cookies = self.do_home_page()
             if self.path == '/admin_product_table.html':
                 username = cookies['remembered_username'].value
-        
-        # if self.path == '/login':
-        #     self.path = '/admin_product_table.html'
-        #     product_data = practice.Product.read_all()
-        #     product_html = ""
-        #     for product in product_data:
-        #         product[1] = "Images/" + product[1]
-        #         product_html += f'''<tr><td>{product[0]}</td>
-        #             <td><img src="{product[1]}"></td>
-        #             <td>{product[2]}</td>
-        #             <td>{product[3]}</td>
-        #             <td>{product[4]}</td>
-        #             <td>{product[5]}</td>
-        #             <td>{product[6]}</td>
-        #             </tr>'''
-        #     with open(self.path[1:], 'r') as f:
-        #         html_content = f.read()
-        #     modified_html_content = html_content.replace("<div id = 'product_table'></div>", product_html)
-        #     self.send_response(200)
-        #     self.end_headers()
-        #     self.wfile.write(bytes(modified_html_content, 'utf-8'))
+        if self.path.startswith("/search"):
+            query_string = self.path.split('?', 1)[1]
+            query_params = urllib.parse.parse_qs(query_string)
+            
+            json_data = query_params.get('data')
+            if json_data:
+                # Convert the JSON data back to a dictionary
+                data = json.loads(json_data[0])
 
+            column = data.get('column')
+            search_term = data.get('searchTerm')
+            if column and search_term:
+                if "'s" in search_term:
+                    index = search_term.find("'s")
+                    search_term = search_term[:index] + "'" + search_term[index:]
+                query = f"SELECT * FROM Product WHERE {column} LIKE '%{search_term}%'"
+                cursor.execute(query)
+
+                search_results = cursor.fetchall()
+                new_html = ""
+                for product in search_results:
+                    product = list(product)
+                    product[1] = "Images/" + product[1]
+                    new_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
+                    <td ><img src="{product[1]}"></td>
+                    <td data-column-name = 'ProductName'>{product[2]}</td>
+                    <td data-column-name = 'Description'>{product[3]}</td>
+                    <td data-column-name = 'Price'>{product[4]}</td>
+                    <td data-column-name = 'CategoryID'>{product[5]}</td>
+                    <td data-column-name = 'Quantity'>{product[6]}</td>
+                    <td><button class="edit-button">Edit</button></td>
+                    </tr>
+                    '''
+                with open('admin_product_table.html', 'r') as f:
+                    html_content = f.read()
+                modified_html_content = html_content.replace('<div id = "product_table"></div>', new_html)
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.end_headers()
+                self.wfile.write(modified_html_content.encode('utf-8'))
+                return
+
+        if self.path == '/home':
+            self.path = '/admin_product_table_redirect.html'
+            product_data = practice.Product.read_all()
+            product_html = ""
+            for product in product_data:
+                product = list(product)
+                product[1] = "Images/" + product[1]
+                product_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
+                    <td ><img src="{product[1]}"></td>
+                    <td data-column-name = 'ProductName'>{product[2]}</td>
+                    <td data-column-name = 'Description'>{product[3]}</td>
+                    <td data-column-name = 'Price'>{product[4]}</td>
+                    <td data-column-name = 'CategoryID'>{product[5]}</td>
+                    <td data-column-name = 'Quantity'>{product[6]}</td>
+                    <td><button class="edit-button">Edit</button></td>
+                    </tr>'''
+            with open(self.path[1:], 'r') as f:
+                html_content = f.read()
+            html_content = html_content.replace('<div id = "product_catalog"></div>', product_html)
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.end_headers()
+            self.wfile.write(html_content.encode('utf-8'))
+            return
         try:
             split_path = os.path.splitext(self.path)
             request_extension = split_path[1]
@@ -140,12 +186,37 @@ class Server(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        if self.path == '/search':
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode('utf-8'))
-            print(data['col'])
-            print(data['searchterm'])
+        # if self.path == "/search":
+        #     content_length = int(self.headers['Content-Length'])
+        #     post_data = self.rfile.read(content_length)
+        #     data = json.loads(post_data)
+
+        #     column = data.get('column')
+        #     search_term = data.get('searchTerm')
+        #     if column and search_term:
+        #         query = f"SELECT * FROM Product WHERE {column} LIKE {search_term}"
+        #         cursor.execute(query)
+
+        #         search_results = cursor.fetchall()
+        #         new_html = ""
+        #         for product in search_results:
+        #             new_html += f'''<tr><td>{product[0]}</td>
+        #             <td><img src="{product[1]}"></td>
+        #             <td>{product[2]}</td>
+        #             <td>{product[3]}</td>
+        #             <td>{product[4]}</td>
+        #             <td>{product[5]}</td>
+        #             <td>{product[6]}</td>
+        #             </tr>
+        #             '''
+        #         with open('admin_product_table.html', 'r') as f:
+        #             html_content = f.read()
+        #         modified_html_content = html_content.replace('<div id = "product_table"></div>', new_html)
+        #         self.send_response(200)
+        #         self.send_header('Content-Type', 'text/html')
+        #         self.end_headers()
+        #         self.wfile.write(modified_html_content.encode('utf-8'))
+        #         return
 
 
         if self.path == "/login":
@@ -171,17 +242,17 @@ class Server(BaseHTTPRequestHandler):
                 for product in product_data:
                     product = list(product)
                     product[1] = "Images/" + product[1]
-                    product_html += f'''<tr><td>{product[0]}</td>
-                        <td><img src="{product[1]}"></td>
-                        <td>{product[2]}</td>
-                        <td>{product[3]}</td>
-                        <td>{product[4]}</td>
-                        <td>{product[5]}</td>
-                        <td>{product[6]}</td>
-                        </tr>'''
+                    product_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
+                    <td ><img src="{product[1]}"></td>
+                    <td data-column-name = 'ProductName'>{product[2]}</td>
+                    <td data-column-name = 'Description'>{product[3]}</td>
+                    <td data-column-name = 'Price'>{product[4]}</td>
+                    <td data-column-name = 'CategoryID'>{product[5]}</td>
+                    <td data-column-name = 'Quantity'>{product[6]}</td>
+                    <td><button class="edit-button">Edit</button></td>
+                    </tr>'''
                 with open('admin_product_table.html', 'r') as f:
                     html_content = f.read()
-                input = f''''''
                 modified_html_content = html_content.replace('<div id = "product_table"></div>', product_html)
                 self.wfile.write(bytes(modified_html_content, encoding = 'utf-8'))
                 return
