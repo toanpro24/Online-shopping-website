@@ -198,7 +198,8 @@ class Server(BaseHTTPRequestHandler):
             price = data.get('Price')
             category_id = data.get('CategoryID')
             quantity = data.get('Quantity')
-            practice.Product.update(product_name, description, price, category_id, quantity, product_id)
+            status = data.get('Status')
+            practice.Product.update(product_name, description, price, category_id, quantity, product_id, status)
             return
         if self.path == "/delete":
             content_length = int(self.headers['Content-Length'])

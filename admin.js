@@ -109,25 +109,74 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleDeleteClick(event) {
         const row = event.target.closest('tr');
         const productID = row.querySelector('td:nth-child(1)').textContent; 
-
-        fetch('/delete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 'ProductID': productID }),
-        })
-        row.remove();    
+        if (window.confirm('Are you fucking sure you want to delete this product?')){
+            fetch('/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 'ProductID': productID }),
+            })
+            row.remove();
+        }
     }
 
-    function handleInsertClick(event){
-        
-    }
+    
     editButtons.forEach(button => {
         button.addEventListener('click', handleEditClick);
     });
     deleteButtons.forEach(button =>{
         button.addEventListener('click', handleDeleteClick);
     })
+
+    function handleInsertClick() {
+        const tableBody = document.querySelector('tbody');
+        const lastRow = tableBody.lastElementChild;
+
+        // Calculate the next incremented ProductID
+        const currentProductID = lastRow ? parseInt(lastRow.querySelector('td:nth-child(1)').textContent) : 0;
+        const newProductID = currentProductID + 1;
+
+        // Create a new row with input fields
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${newProductID}</td>
+            <td><input type="text" value="Images/product${newProductID}.jpg"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td>
+                <button class="save-button">Save</button>
+                <button class="delete-button">Delete</button>
+            </td>
+        `;
+
+        // Append the new row to the table body
+        tableBody.appendChild(newRow);
+
+        // Attach event listeners to the new "Save" and "Delete" buttons
+        const saveButton = newRow.querySelector('.save-button');
+        const deleteButton = newRow.querySelector('.delete-button');
+
+        saveButton.addEventListener('click', function() {
+            handleSaveClick(newRow);
+        });
+
+        deleteButton.addEventListener('click', function() {
+            if (window.confirm('Are you sure you want to delete this row?')) {
+                handleDeleteClick(newRow);
+            }
+        });
+    }
+
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            handleEditClick(button);
+        });
+    });
+
+    insertButton.addEventListener('click', handleInsertClick);
 
 });
