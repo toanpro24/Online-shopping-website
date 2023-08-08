@@ -194,13 +194,13 @@ class Orders:
         except:
             conn.rollback()
 
-    def update(self):
+    def update_status(status, order_id):
         try:
             conn = connect_to_database()
             cursor = conn.cursor()
 
-            query = "UPDATE Orders SET CustomerID = %s, OrderDate = %s, TotalPrice = %s, Status = %s WHERE OrderID = %s"
-            values = (self.customer_id, self.order_date, self.total_price, self.status, self.order_id)
+            query = "UPDATE Orders SET Status = %s WHERE OrderID = %s"
+            values = (status, order_id)
 
             cursor.execute(query, values)
             conn.commit()
@@ -363,7 +363,7 @@ class Product:
             cursor = conn.cursor()
 
             query = "UPDATE Product SET ProductName = %s, Description = %s, Price = %s, CategoryID = %s, Quantity = %s, Status = %s  WHERE ProductID = %s"
-            values = (product_name, description, price, category_id, quantity, product_id, status)
+            values = (product_name, description, price, category_id, quantity, status, product_id)
 
             cursor.execute(query, values)
             conn.commit()
@@ -962,16 +962,25 @@ categories = [
 #     category_name, description, stt = category
 #     Categories.create(category_name,description, stt)
 products = [
-    ("product1.jpg", "Men's Striped Button-Down Shirt", "This men's striped button-down shirt offers a classic and stylish look suitable for various occasions. Made from high-quality cotton fabric, it ensures comfort, breathability, and durability. The shirt features a timeless vertical stripe pattern in shades of blue and white, adding a touch of sophistication to your ensemble.", 19.99, 2, 50, 1),
-    ("product2.jpg", "Women's Slim Fit Dark Wash Jeans", "These women's slim fit dark wash jeans are a versatile and stylish addition to any wardrobe. Crafted from premium denim fabric, these jeans offer a flattering and comfortable fit with a hint of stretch for ease of movement. The dark wash adds a touch of sophistication and pairs well with a variety of tops and shoes.", 29.99, 2, 30, 1),
-    ("product3.jpg", " Men's Classic Canvas Sneakers", "These men's classic canvas sneakers combine style and comfort, making them a must-have footwear choice. The sneakers feature a durable canvas upper that offers breathability and a timeless look. With a lace-up closure, padded collar, and cushioned insole, these sneakers provide a snug fit and all-day comfort. The rubber outsole offers excellent traction, making them suitable for various activities and terrains. Whether you're strolling around the city or running errands, these versatile sneakers will elevate your casual style.", 59.99, 5, 20, 1),
-    ("product4.jpg", "Women's Strappy Flat Sandals", "Step into comfort and style with these women's strappy flat sandals. Designed for warm weather and casual occasions, these sandals feature multiple crisscross straps that provide a secure and adjustable fit. The sandals are made from synthetic materials, ensuring durability and easy maintenance. The flat sole offers comfort for all-day wear, while the open-toe design keeps your feet cool. Perfect for pairing with summer dresses or shorts, these strappy flat sandals are a go-to choice for effortless style.", 24.99, 5, 15, 1),
-    ("product5.jpg", "Men's Stainless Steel Chronograph Watch", "Add a touch of elegance and functionality to your wrist with this men's stainless steel chronograph watch. The watch showcases a sleek and masculine design with a stainless steel case and bracelet. The chronograph feature allows you to track elapsed time with precision, while the date window adds practicality. With water resistance and a reliable quartz movement, this watch is suitable for everyday wear and various activities. Make a bold statement with this sophisticated timepiece that seamlessly blends style and functionality.", 79.99, 10, 10, 1),
-    ("product6.jpg", "Women's Sterling Silver Charm Bracelet", "This women's sterling silver charm bracelet is a charming accessory that complements any outfit. Crafted from high-quality sterling silver, the bracelet features a link chain with various dangling charms. The adjustable length ensures a comfortable fit, and the lobster clasp provides secure closure. The intricate details and polished finish add a touch of elegance, making this bracelet a versatile piece for both casual and formal occasions. Express your personal style and capture attention with this beautiful sterling silver charm bracelet.", 12.99, 10, 25, 1),
-    ("product7.jpg", "Unisex Water-Resistant Laptop Backpack", "Stay organized and carry your essentials in style with this unisex water-resistant laptop backpack. The backpack is made from durable nylon material that offers water resistance, protecting your belongings in light rain or accidental spills. With multiple compartments and pockets, including a padded laptop sleeve, it provides ample storage and organization options. The adjustable shoulder straps and back padding ensure comfortable carrying, even during long commutes. Whether you're a student, professional, or traveler, this versatile backpack is designed to meet your needs while keeping your belongings safe and secure.", 39.99, 5, 10, 1),
-    ("product8.jpg", "Protective Neoprene Laptop Sleeve", "Keep your laptop safe and secure with this protective neoprene laptop sleeve. The sleeve is designed to fit most standard laptops, providing a snug and cushioned fit. The neoprene material offers shock absorption and protects against scratches, bumps, and dust. The slim and lightweight design allows for easy transport in a bag or on its own. Whether you're commuting, traveling, or working from a café, this laptop sleeve ensures your device stays protected and adds a touch of style.", 19.99, 1, 20, 1),
-    ("product9.jpg", "Wireless Over-Ear Noise-Canceling Headphones", "Immerse yourself in high-quality audio with these wireless over-ear noise-canceling headphones. The headphones feature advanced noise-canceling technology, reducing unwanted background noise and providing a more focused listening experience. With Bluetooth connectivity,you can enjoy wireless freedom and easily connect to your devices. The over-ear design and cushioned ear cups offer comfort for extended wear. The headphones deliver rich and immersive sound, with deep bass and crisp highs, perfect for music enthusiasts and audiophiles. With a long battery life and convenient controls, these headphones are ideal for travel, work, or leisure, allowing you to enjoy your favorite music with exceptional clarity and convenience.", 49.99, 1, 15, 1),
-    ("product10.jpg", "Portable Bluetooth Speaker with Enhanced Bass", "Take your music wherever you go with this portable Bluetooth speaker. The speaker boasts a compact and lightweight design, making it easy to carry in your backpack or purse. Despite its size, it delivers impressive sound quality with enhanced bass, providing a rich and immersive listening experience. With Bluetooth connectivity, you can wirelessly connect your devices and stream music effortlessly. The speaker also features a built-in rechargeable battery that offers long playtime, allowing you to enjoy your favorite tunes for hours. Whether you're at a picnic, party, or beach, this portable Bluetooth speaker ensures a vibrant and enjoyable audio experience.", 29.99, 1, 10, 1),
+    ("product1.jpg", "Men's Striped Button-Down Shirt", "A classic and stylish men's button-down shirt with a timeless vertical stripe pattern for a touch of sophistication. Made from high-quality cotton fabric, ensuring comfort and durability.", 19.99, 2, 50, 1),
+    ("product2.jpg", "Women's Slim Fit Dark Wash Jeans", "Versatile and flattering women's dark wash jeans crafted from premium denim fabric. Features a hint of stretch for a comfortable fit, and pairs well with various tops and shoes", 29.99, 2, 30, 1),
+    ("product3.jpg", " Men's Classic Canvas Sneakers", "Stylish and comfortable men's canvas sneakers with a durable upper, padded collar, and cushioned insole. Suitable for various activities with excellent traction", 59.99, 5, 20, 1),
+    ("product4.jpg", "Women's Strappy Flat Sandals", "Comfortable and chic women's flat sandals with multiple crisscross straps for a secure fit. Made from synthetic materials, perfect for warm weather. ", 24.99, 5, 15, 1),
+    ("product5.jpg", "Men's Stainless Steel Chronograph Watch", "A sophisticated men's stainless steel chronograph watch featuring a sleek design, precise timekeeping, and water resistance. ", 79.99, 10, 10, 1),
+    ("product6.jpg", "Women's Sterling Silver Charm Bracelet", "An elegant sterling silver charm bracelet with intricate details, adding a touch of charm to any outfit", 12.99, 10, 25, 1),
+    ("product7.jpg", "Unisex Water-Resistant Laptop Backpack", "A durable and water-resistant laptop backpack with multiple compartments and padded laptop sleeve. Comfortable for all-day wear and suitable for various needs.", 39.99, 5, 10, 1),
+    ("product8.jpg", "Protective Neoprene Laptop Sleeve", "Keep your laptop safe with this protective neoprene laptop sleeve. Offers shock absorption and easy transport.", 19.99, 1, 20, 1),
+    ("product9.jpg", "Wireless Over-Ear Noise-Canceling Headphones", "Enjoy high-quality audio with wireless noise-canceling headphones, featuring Bluetooth connectivity and exceptional sound clarity. ", 49.99, 1, 15, 1),
+    ("product10.jpg", "Portable Bluetooth Speaker with Enhanced Bass", "Take your music anywhere with this compact Bluetooth speaker, delivering impressive sound quality and long playtime. ", 29.99, 1, 10, 1),
+    ("product11.jpg", "Adventures in Wonderland: The Complete Lewis Carroll Collection", "Take your music anywhere with this compact Bluetooth speaker, delivering impressive sound quality and long playtime.", 29.99, 3, 30, 1),
+    ("product12.jpg", "Elegance Marble Coasters Set", "Add elegance to your home with these exquisite marble coasters, each showcasing unique veining patterns. Protect surfaces while impressing guests.", 39.99, 4, 25, 1),
+    ("product13.jpg", "Premium Yoga Mat with Alignment Lines", '''Elevate your yoga practice with this eco-friendly TPE yoga mat. Featuring alignment lines for precise poses and a non-slip surface for stability, it's the perfect companion for a fulfilling yoga session. Dimensions: 72" x 24".''', 49.99, 9, 65, 1),
+    ("product14.jpg", "Glow Radiance Vitamin C Serum", "Illuminate your complexion with our antioxidant-rich serum. Achieve a healthy, youthful glow effortlessly.", 12.99, 6, 120, 1),
+    ("product15.jpg", "Adventure Explorer Outdoor Play Set", "Ignite your child's imagination with our Adventure Explorer Outdoor Play Set. This versatile set includes a sturdy treehouse, swing, and slide, providing hours of outdoor fun. Crafted with safety in mind, it encourages active play and creative adventures. Let your child's imagination run wild with this ultimate playtime companion.", 199.99, 7, 75, 1),
+    ("product16.jpg", "Strategy Board Games Bundle", "Elevate family game night with our Strategy Board Games Bundle. This collection includes classic titles like Chess, Checkers, and Go, offering endless entertainment and mental stimulation. Perfect for all ages, it's a great way to bond, strategize, and have fun together. Unleash your inner tactician with this diverse board game set.", 49.99, 7, 200, 1),
+    ("product17.jpg", "UltraGrip All-Season Car Tires", "Experience superior traction in all weather conditions with our UltraGrip All-Season Car Tires. Designed for optimal performance on wet, dry, and snowy roads, these tires provide safety and control. Enjoy a smooth and comfortable ride while conquering any road ahead.", 89.99, 8, 64, 1),
+    ("product18.jpg", "AutoGuard Dash Cam Pro", "Capture every moment on the road with the AutoGuard Dash Cam Pro. Equipped with advanced features like 4K recording, GPS tracking, and collision detection, it ensures your safety and peace of mind. Record your journeys, monitor surroundings, and document incidents effortlessly. Drive confidently with this high-tech automotive companion.", 149.99, 8, 20, 1),
+    
 ]
 
 
@@ -1022,3 +1031,9 @@ order_details = [
 #Orders.reset_identity_column()
 #Cart.reset_identity_column()
 
+
+
+#Product.reset_identity_column()
+
+# Orders.reset_identity_column()
+# OrderDetails.reset_identity_column()

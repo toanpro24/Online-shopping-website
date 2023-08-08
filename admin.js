@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // });
         const queryString = encodeURIComponent(JSON.stringify(data));
 
-        // Make the GET request with JSON data
         fetch(`/search?data=${queryString}`, {
             method: 'GET',
         });
@@ -47,11 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     const editButtons = document.querySelectorAll('.edit-button');
     const deleteButtons = document.querySelectorAll('.delete-button');
+    const insertButtons = document.querySelectorAll('.insert-button')
+
+
     function handleEditClick(event) {
         const row = event.target.closest('tr'); 
         const cells = row.querySelectorAll('td'); 
 
-        for (let i = 2; i < cells.length - 1; i++) {
+        for (let i = 2; i < cells.length - 2; i++) {
                 const cell = cells[i];
                 const cellContent = cell.textContent;
                 const input = document.createElement('input');
@@ -59,7 +61,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 input.value = cellContent;
                 cell.textContent = '';
                 cell.appendChild(input);
-            
         }
 
         event.target.remove();
@@ -68,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
         saveButton.className = 'save-button';
         saveButton.textContent = 'Save';
         saveButton.addEventListener('click', handleSaveClick);
-        row.querySelector('td:last-child').appendChild(saveButton);
+        row.querySelector('td:nth-last-child(2)').appendChild(saveButton);
     }
 
     function handleSaveClick(event) {
@@ -102,13 +103,14 @@ document.addEventListener('DOMContentLoaded', function() {
         editButton.className = 'edit-button';
         editButton.textContent = 'Edit';
         editButton.addEventListener('click', handleEditClick);
-        row.querySelector('td:last-child').appendChild(editButton);
+        row.querySelector('td:nth-last-child(2)').appendChild(editButton);
 
         event.target.remove();
     }
     function handleDeleteClick(event) {
         const row = event.target.closest('tr');
         const productID = row.querySelector('td:nth-child(1)').textContent; 
+        
         if (window.confirm('Are you fucking sure you want to delete this product?')){
             fetch('/delete', {
                 method: 'POST',
@@ -127,56 +129,95 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     deleteButtons.forEach(button =>{
         button.addEventListener('click', handleDeleteClick);
-    })
+    });
+    function handleCreateClick(event){
+        const row = event.target.closest('tr');
+        const inputs = row.querySelectorAll('input'); 
+        const data = {};
+        const imageElement = row.querySelector('td:nth-child(2) img');
+        const srcParts = imageElement.src.split('/');
+        const filename = srcParts[srcParts.length - 1];
+        data['ProductID'] = row.querySelector('td:nth-child(1)').textContent; 
+        data['PictureName'] = filename;
+        for (let i = 0; i < inputs.length; i++) {
+            const input = inputs[i];
+            const columnName = input.parentElement.getAttribute('data-column-name');
+            const inputValue = input.value;
+            data[columnName] = inputValue;
+        };
+        fetch('/insert', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+        for (let i = 0; i < inputs.length; i++) {
+            const input = inputs[i];
+            const inputValue = input.value;
+            
+            const cell = input.parentElement;
+            cell.textContent = inputValue;
+        };
+
+        const editButton = document.createElement('button');
+        editButton.className = 'edit-button';
+        editButton.textContent = 'Edit';
+        editButton.addEventListener('click', handleEditClick);
+        row.querySelector('td:nth-last-child(2)').appendChild(editButton);
+
+        event.target.remove();
+    }
+
 
     function handleInsertClick() {
         const tableBody = document.querySelector('tbody');
         const lastRow = tableBody.lastElementChild;
 
-        // Calculate the next incremented ProductID
         const currentProductID = lastRow ? parseInt(lastRow.querySelector('td:nth-child(1)').textContent) : 0;
         const newProductID = currentProductID + 1;
-
-        // Create a new row with input fields
+        
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
             <td>${newProductID}</td>
-            <td><input type="text" value="Images/product${newProductID}.jpg"></td>
-            <td><input type="text"></td>
-            <td><input type="text"></td>
-            <td><input type="text"></td>
-            <td><input type="text"></td>
-            <td><input type="text"></td>
-            <td>
-                <button class="save-button">Save</button>
-                <button class="delete-button">Delete</button>
-            </td>
+            <td><img src ="Images/product${newProductID}.jpg"></td>
+            <td data-column-name = 'ProductName'></td>
+            <td data-column-name = 'Description'></td>
+            <td data-column-name = 'Price'></td>
+            <td data-column-name = 'CategoryID'></td>
+            <td data-column-name = 'Quantity'></td>
+            <td><button class="create-button">Create</button></td>
+            <td><button class="delete-button">Delete</button></td>
         `;
-
-        // Append the new row to the table body
         tableBody.appendChild(newRow);
-
-        // Attach event listeners to the new "Save" and "Delete" buttons
-        const saveButton = newRow.querySelector('.save-button');
+        const cells = newRow.querySelectorAll('td');
+        for (let i = 2; i < cells.length - 2; i++) {
+            const cell = cells[i];
+            const cellContent = cell.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = cellContent;
+            cell.textContent = '';
+            cell.appendChild(input);
+        }
+            
+        
         const deleteButton = newRow.querySelector('.delete-button');
+        const createButton = newRow.querySelector('.create-button')
 
-        saveButton.addEventListener('click', function() {
-            handleSaveClick(newRow);
+        createButton.addEventListener('click', handleCreateClick);
+        
+        
+        editButtons.forEach(button => {
+            button.addEventListener('click', handleEditClick);
         });
-
         deleteButton.addEventListener('click', function() {
             if (window.confirm('Are you sure you want to delete this row?')) {
                 handleDeleteClick(newRow);
             }
         });
     }
-
-    editButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            handleEditClick(button);
-        });
+    insertButtons.forEach(button => {
+        button.addEventListener('click', handleInsertClick);
     });
-
-    insertButton.addEventListener('click', handleInsertClick);
-
 });

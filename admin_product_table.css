@@ -77,3 +77,11 @@ header {
     padding: 5px 10px;
     cursor: pointer;
 }
+
+.insert-button{
+    background-color: orange;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}

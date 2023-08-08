@@ -98,6 +98,8 @@ class Server(BaseHTTPRequestHandler):
             cookies = self.do_home_page()
             if self.path == '/admin_product_table.html':
                 username = cookies['remembered_username'].value
+
+            
         if self.path.startswith("/search"):
             query_string = self.path.split('?', 1)[1]
             query_params = urllib.parse.parse_qs(query_string)
@@ -121,17 +123,18 @@ class Server(BaseHTTPRequestHandler):
                 for product in search_results:
                     product = list(product)
                     product[1] = "Images/" + product[1]
-                    new_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
-                    <td ><img src="{product[1]}"></td>
-                    <td data-column-name = 'ProductName'>{product[2]}</td>
-                    <td data-column-name = 'Description'>{product[3]}</td>
-                    <td data-column-name = 'Price'>{product[4]}</td>
-                    <td data-column-name = 'CategoryID'>{product[5]}</td>
-                    <td data-column-name = 'Quantity'>{product[6]}</td>
-                    <td><button class="edit-button">Edit</button></td>
-                    <td><button class = "delete-button">Delete</button></td>
-                    </tr>
-                    '''
+                    if product[7] == 1:
+                        new_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
+                        <td ><img src="{product[1]}"></td>
+                        <td data-column-name = 'ProductName'>{product[2]}</td>
+                        <td data-column-name = 'Description'>{product[3]}</td>
+                        <td data-column-name = 'Price'>{product[4]}</td>
+                        <td data-column-name = 'CategoryID'>{product[5]}</td>
+                        <td data-column-name = 'Quantity'>{product[6]}</td>
+                        <td><button class="edit-button">Edit</button></td>
+                        <td><button class = "delete-button">Delete</button></td>
+                        </tr>
+                        '''
                 with open('admin_product_table.html', 'r') as f:
                     html_content = f.read()
                 modified_html_content = html_content.replace('<div id = "product_table"></div>', new_html)
@@ -141,6 +144,56 @@ class Server(BaseHTTPRequestHandler):
                 self.wfile.write(modified_html_content.encode('utf-8'))
                 return
 
+        if self.path == '/ordersummary':
+            cursor.execute('SELECT * FROM Orders')
+            orders = cursor.fetchall()
+            order_html = ""
+            for order in orders:
+                order = list(order)
+                if order[4] != 3:
+                    order_html += f'''<tr onclick="viewOrderDetails({order[0]})">
+                    <td>{order[0]}</td>
+                    <td>{order[1]}</td>
+                    <td>{order[2]}</td>
+                    <td>{order[3]}</td>
+                    <td><select onchange="handleStatusChange(this, {order[0]})">
+                        <option value="Pending" {'selected' if order[4] == 1 else ''}>1</option>
+                        <option value="Shipped" {'selected' if order[4] == 2 else ''}>2</option>
+                        <option value="Delivered" {'selected' if order[4] == 3 else ''}>3</option>
+                        </select></td>
+                    </tr>'''
+            with open('ordersummary.html', 'r') as f:
+                html_content = f.read()
+            modified_html_content = html_content.replace('<div id = "ordersummary"></div>', order_html)
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.end_headers()
+            self.wfile.write(modified_html_content.encode('utf-8'))
+            return
+        
+        if self.path.startswith('/orderdetails'):
+            query_params = self.path.split('?')[1]
+            key, value = query_params.split('=')
+            if key == 'orderID':
+                order_id = value
+            cursor.execute(f"SELECT * from OrderDetails where OrderID = {order_id}")
+            order_details = cursor.fetchall()
+            details_html = ""
+            for order_detail in order_details:
+                details_html += f'''<tr>
+                <td>{order_detail[0]}</td>
+                <td>{order_detail[1]}</td>
+                <td>{order_detail[2]}</td>
+                <td>{order_detail[3]}</td>
+                </tr>'''
+            with open('orderdetails.html', 'r') as f:
+                html_content = f.read()
+            modified_html_content = html_content.replace('<div id = "orderdetails"></div>', details_html)
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.end_headers()
+            self.wfile.write(modified_html_content.encode('utf-8'))
+            return
         if self.path == '/home':
             self.path = '/admin_product_table_redirect.html'
             product_data = practice.Product.read_all()
@@ -148,16 +201,17 @@ class Server(BaseHTTPRequestHandler):
             for product in product_data:
                 product = list(product)
                 product[1] = "Images/" + product[1]
-                product_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
-                    <td ><img src="{product[1]}"></td>
-                    <td data-column-name = 'ProductName'>{product[2]}</td>
-                    <td data-column-name = 'Description'>{product[3]}</td>
-                    <td data-column-name = 'Price'>{product[4]}</td>
-                    <td data-column-name = 'CategoryID'>{product[5]}</td>
-                    <td data-column-name = 'Quantity'>{product[6]}</td>
-                    <td><button class="edit-button">Edit</button></td>
-                    <td><button class = "delete-button">Delete</button></td>
-                    </tr>'''
+                if product[7] == 1:
+                    product_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
+                        <td ><img src="{product[1]}"></td>
+                        <td data-column-name = 'ProductName'>{product[2]}</td>
+                        <td data-column-name = 'Description'>{product[3]}</td>
+                        <td data-column-name = 'Price'>{product[4]}</td>
+                        <td data-column-name = 'CategoryID'>{product[5]}</td>
+                        <td data-column-name = 'Quantity'>{product[6]}</td>
+                        <td><button class="edit-button">Edit</button></td>
+                        <td><button class = "delete-button">Delete</button></td>
+                        </tr>'''
             with open(self.path[1:], 'r') as f:
                 html_content = f.read()
             html_content = html_content.replace('<div id = "product_catalog"></div>', product_html)
@@ -188,17 +242,41 @@ class Server(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
+        if self.path == "/updateOrderStatus":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+            print(data)
+            orderID = data.get('orderID')
+            status  = data.get('status')
+            practice.Orders.update_status(status, orderID)
+
+        if self.path == "/insert":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+            # print(data)
+            picture_name = data.get('PictureName')
+            product_name = data.get('ProductName')
+            description = data.get('Description')
+            price = data.get('Price')
+            category_id = data.get('CategoryID')
+            quantity = data.get('Quantity')
+            status = 1
+            practice.Product.create(picture_name, product_name, description, price, category_id, quantity, status)
+            return
         if self.path == "/update":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data)
+            print(data)
             product_id = data.get('ProductID')
             product_name = data.get('ProductName')
             description = data.get('Description')
             price = data.get('Price')
             category_id = data.get('CategoryID')
             quantity = data.get('Quantity')
-            status = data.get('Status')
+            status = 1
             practice.Product.update(product_name, description, price, category_id, quantity, product_id, status)
             return
         if self.path == "/delete":
@@ -231,16 +309,17 @@ class Server(BaseHTTPRequestHandler):
                 for product in product_data:
                     product = list(product)
                     product[1] = "Images/" + product[1]
-                    product_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
-                    <td ><img src="{product[1]}"></td>
-                    <td data-column-name = 'ProductName'>{product[2]}</td>
-                    <td data-column-name = 'Description'>{product[3]}</td>
-                    <td data-column-name = 'Price'>{product[4]}</td>
-                    <td data-column-name = 'CategoryID'>{product[5]}</td>
-                    <td data-column-name = 'Quantity'>{product[6]}</td>
-                    <td><button class = "edit-button">Edit</button></td>
-                    <td><button class = "delete-button">Delete</button></td>
-                    </tr>'''
+                    if product[7] == 1:
+                        product_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
+                        <td ><img src="{product[1]}"></td>
+                        <td data-column-name = 'ProductName'>{product[2]}</td>
+                        <td data-column-name = 'Description'>{product[3]}</td>
+                        <td data-column-name = 'Price'>{product[4]}</td>
+                        <td data-column-name = 'CategoryID'>{product[5]}</td>
+                        <td data-column-name = 'Quantity'>{product[6]}</td>
+                        <td><button class = "edit-button">Edit</button></td>
+                        <td><button class = "delete-button">Delete</button></td>
+                        </tr>'''
                 with open('admin_product_table.html', 'r') as f:
                     html_content = f.read()
                 modified_html_content = html_content.replace('<div id = "product_table"></div>', product_html)

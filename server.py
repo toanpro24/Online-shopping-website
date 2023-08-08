@@ -16,7 +16,11 @@ import json
 conn = practice.connect_to_database()
 cursor = conn.cursor()
 
-
+order_id = 0
+def get_next_order_id():
+    global order_id
+    order_id += 1
+    return order_id
 class Server(BaseHTTPRequestHandler):
     def do_login(self, username):
      ##-------###
@@ -341,6 +345,7 @@ class Server(BaseHTTPRequestHandler):
     
     
     def do_POST(self):
+        
         # if self.path == "/addtocart":
         #     content_length = int(self.headers['Content-Length'])
         #     post_data = self.rfile.read(content_length)
@@ -439,14 +444,17 @@ class Server(BaseHTTPRequestHandler):
             username = form_data['username']
             total_price = form_data['total_price']
             cart = form_data['cart']
+            print(cart)
             cursor.execute("SELECT CustomerID from Customer WHERE Username = %s", username)
             customer_id = cursor.fetchone()
             order_date = datetime.datetime.utcnow()
             status = 1
-            for items in cart:
-                cursor.execute(f"INSERT INTO OrderDetails (ProductID, Quantity, Price) VALUES (%s, %s, %s)", ({items['ID']}, {items['Quantity']}, {items['Price']}))
             cursor.execute("INSERT INTO Orders (CustomerID, OrderDate, TotalPrice, Status) VALUES (%s, %s, %s, %s)", (customer_id, order_date, total_price, status))
             conn.commit()
+            order_id = get_next_order_id()
+            for items in cart:
+                cursor.execute("INSERT INTO OrderDetails (OrderID, ProductID, Quantity, Price) VALUES (%s, %s, %s, %s)", (order_id, int(items['id']), items['quantity'], items['price']))
+                conn.commit()
             return
             
     def get_data_html(self):
