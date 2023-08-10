@@ -2,6 +2,7 @@ import http.cookies
 from http import cookies
 from http.server import BaseHTTPRequestHandler
 import os
+import urllib
 import practice
 from urllib.parse import parse_qs
 from datetime import datetime, timedelta
@@ -16,11 +17,7 @@ import json
 conn = practice.connect_to_database()
 cursor = conn.cursor()
 
-order_id = 0
-def get_next_order_id():
-    global order_id
-    order_id += 1
-    return order_id
+
 class Server(BaseHTTPRequestHandler):
     def do_login(self, username):
      ##-------###
@@ -84,6 +81,58 @@ class Server(BaseHTTPRequestHandler):
             if self.path == '/index3.html':
                 username = cookies['remembered_username'].value
 
+        if self.path.startswith("/search"):
+            query_string = self.path.split('?', 1)[1]
+            query_params = urllib.parse.parse_qs(query_string)
+            
+            json_data = query_params.get('data')
+            if json_data:
+                data = json.loads(json_data[0])
+
+            search_term = data.get('searchTerm')
+            if "'s" in search_term:
+                index = search_term.find("'s")
+                search_term = search_term[:index] + "'" + search_term[index:]
+            
+            
+            cursor.execute("SELECT * FROM Categories")
+            categories_data = cursor.fetchall()
+            table_html = "<div style = 'width:110%'>"
+            for category in categories_data:
+                table_html += f"<a class = 'navbar' href='/?CategoryID={category[0]}'>{category[1]}</a>"
+            table_html += "</div>"
+
+            query = f"SELECT * FROM Product WHERE ProductName LIKE '%{search_term}%'"
+            cursor.execute(query)
+            search_results = cursor.fetchall()
+            new_html = "<div class = 'content-container' id = 'contentContainer'><div id = 'row'>"
+            k = 0
+            for product in search_results:
+                product = list(product)
+                if product[7] == 1:
+                    new_html += f"""
+                                    <div class='element'>
+                                        <a href = '/?ProductID={product[0]}' ><img src='Images/{product[1]}' alt= "{product[2]}" style='width:20%'></a>
+                                        <a href = '/?ProductID={product[0]}'  style ='text-decoration: none;'><h2 class="a-size-base-plus a-color-base a-text-normal">{product[2]}</h2></a>
+                                        <p class = 'price'>${product[4]}</p>      
+                                    </div>
+                                """  
+                    k += 1
+                    if k == 5:
+                        new_html += "</div><div id = 'row'>"
+                        k = 0
+            new_html += "</div></div>"  
+            with open('index1.html', 'r') as f:
+                html_content = f.read()
+            print(new_html)
+            modified_html_content = table_html + new_html
+            modified_html_content = html_content.replace('<div id="new_container"></div>', modified_html_content)
+            #print(modified_html_content)
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
+            self.end_headers()
+            self.wfile.write(modified_html_content.encode('utf-8'))
+            return
 
         #checkout page
         if self.path == "/checkout":
@@ -204,7 +253,7 @@ class Server(BaseHTTPRequestHandler):
                             category_id = category[0]
                             cursor.execute("SELECT * FROM Product WHERE CategoryID = %s", category_id)
                             filtered_products = cursor.fetchall()
-                            filtered_product_html = ""
+                            filtered_product_html = "<div class = 'content-container' id = 'contentContainer'>"
                             for product in filtered_products:
                                 filtered_product_html += f"""
                                     <div class='element'>
@@ -213,6 +262,7 @@ class Server(BaseHTTPRequestHandler):
                                         <p class = 'price'>${product[4]}</p>      
                                     </div>
                                 """  
+                            filtered_product_html += "</div>"
                             modified_html_content = table_html + filtered_product_html
                             self.path = "/index1.html"
                             with open(self.path[1:], 'r') as f:
@@ -265,7 +315,7 @@ class Server(BaseHTTPRequestHandler):
                             return
                         
                     #5 products in a row    
-                    product_html = "<div id = 'container'><div id = 'row'>"
+                    product_html = "<div class = 'content-container' id = 'contentContainer'><div id = 'row'>"
                     index = 0
                     for product in products_data:
                         product_html += f"""
@@ -451,8 +501,16 @@ class Server(BaseHTTPRequestHandler):
             status = 1
             cursor.execute("INSERT INTO Orders (CustomerID, OrderDate, TotalPrice, Status) VALUES (%s, %s, %s, %s)", (customer_id, order_date, total_price, status))
             conn.commit()
-            order_id = get_next_order_id()
+            cursor.execute("SELECT * FROM Orders")
+            orders = cursor.fetchall()
+            order = orders[len(orders)-1]
+            order_id = order[0]
             for items in cart:
+                cursor.execute(f"SELECT * FROM Products WHERE ProductID = {int(items['id'])}")
+                quantity = cursor.fetchone()
+                quantity[6] -= items['quantity']
+                cursor.execute(f"UPDATE Product SET Quantity = {quantity[6]} WHERE ProductID = {int(items['id'])}")
+                conn.commit()
                 cursor.execute("INSERT INTO OrderDetails (OrderID, ProductID, Quantity, Price) VALUES (%s, %s, %s, %s)", (order_id, int(items['id']), items['quantity'], items['price']))
                 conn.commit()
             return

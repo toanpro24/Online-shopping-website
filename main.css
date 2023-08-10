@@ -72,6 +72,7 @@
     text-align: center;
     font-family: arial;
     text-decoration: none;
+    display: inline-block;
     }
 
   .price {
@@ -167,4 +168,21 @@ a.header-link {
   text-decoration: none;
   display: block;
   width: 100%;
+}
+.content-container {
+  width: 300px;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+.pagination {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination button {
+  margin: 0 5px;
+  cursor: pointer;
 }

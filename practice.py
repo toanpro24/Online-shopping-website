@@ -1034,6 +1034,3 @@ order_details = [
 
 
 #Product.reset_identity_column()
-
-# Orders.reset_identity_column()
-# OrderDetails.reset_identity_column()

@@ -98,7 +98,6 @@ class Server(BaseHTTPRequestHandler):
             cookies = self.do_home_page()
             if self.path == '/admin_product_table.html':
                 username = cookies['remembered_username'].value
-
             
         if self.path.startswith("/search"):
             query_string = self.path.split('?', 1)[1]
@@ -106,17 +105,25 @@ class Server(BaseHTTPRequestHandler):
             
             json_data = query_params.get('data')
             if json_data:
-                # Convert the JSON data back to a dictionary
                 data = json.loads(json_data[0])
 
             column = data.get('column')
             search_term = data.get('searchTerm')
+           
             if column and search_term:
                 if "'s" in search_term:
                     index = search_term.find("'s")
                     search_term = search_term[:index] + "'" + search_term[index:]
-                query = f"SELECT * FROM Product WHERE {column} LIKE '%{search_term}%'"
-                cursor.execute(query)
+                if column == 'ProductName':
+                    query = f"SELECT * FROM Product WHERE {column} LIKE '%{search_term}%'"
+                    cursor.execute(query)
+                elif column == 'ProductID':
+                    query = f"SELECT * FROM Product WHERE ProductID = {search_term}"
+                    cursor.execute(query)
+                else:
+                    query = f"SELECT * FROM Product Where CategoryID = {search_term}"
+                    cursor.execute(query)
+                    
 
                 search_results = cursor.fetchall()
                 new_html = ""
@@ -143,25 +150,68 @@ class Server(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(modified_html_content.encode('utf-8'))
                 return
-
-        if self.path == '/ordersummary':
-            cursor.execute('SELECT * FROM Orders')
-            orders = cursor.fetchall()
-            order_html = ""
-            for order in orders:
-                order = list(order)
-                if order[4] != 3:
-                    order_html += f'''<tr onclick="viewOrderDetails({order[0]})">
+            else:
+                status  = data.get('Status')
+                if status != 'All':
+                    if status == 'Pending':
+                        status = 1
+                    elif status == 'Shipped':
+                        status = 2
+                    else:
+                        status = 3
+                    cursor.execute(f"SELECT * FROM Orders WHERE Status = {status}")
+                    
+                else:
+                    cursor.execute("SELECT * FROM Orders")
+                    
+                result = cursor.fetchall()
+                order_html = ""
+                for order in result:
+                    order = list(order)
+                    if order[4] == 1:
+                        order[4] = 'Pending'
+                    elif order[4] == 2:
+                        order[4] = 'Shipped'
+                    else:
+                        order[4] = 'Delivered'
+                    order_html += f'''
+                    <tr>
                     <td>{order[0]}</td>
                     <td>{order[1]}</td>
                     <td>{order[2]}</td>
                     <td>{order[3]}</td>
-                    <td><select onchange="handleStatusChange(this, {order[0]})">
-                        <option value="Pending" {'selected' if order[4] == 1 else ''}>1</option>
-                        <option value="Shipped" {'selected' if order[4] == 2 else ''}>2</option>
-                        <option value="Delivered" {'selected' if order[4] == 3 else ''}>3</option>
-                        </select></td>
-                    </tr>'''
+                    <td>{order[4]}</td>
+                    </tr>
+                        '''
+                with open('ordersummary.html', 'r') as f:
+                    html_content = f.read()
+                modified_html_content = html_content.replace('<div id = "ordersummary"></div>', order_html)
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html')
+                self.end_headers()
+                self.wfile.write(modified_html_content.encode('utf-8'))
+                return
+        if self.path == '/ordersummary':
+            cursor.execute('SELECT * FROM Orders WHERE STATUS != 3')
+            orders = cursor.fetchall()
+            order_html = ""
+            for order in orders:
+                order = list(order)
+                if order[4] == 1:
+                    order[4] = 'Pending'
+                elif order[4] == 2:
+                    order[4] = 'Shipped'
+                else:
+                    order[4] = 'Delivered'
+                order_html += f'''
+                <tr>
+                <td onclick="viewOrderDetails({order[0]})">{order[0]}</td>
+                <td onclick="viewOrderDetails({order[0]})">{order[1]}</td>
+                <td onclick="viewOrderDetails({order[0]})">{order[2]}</td>
+                <td onclick="viewOrderDetails({order[0]})">{order[3]}</td>
+                <td>{order[4]}</td>
+                <td><button class="edit-button">Edit</button></td>
+                </tr>'''
             with open('ordersummary.html', 'r') as f:
                 html_content = f.read()
             modified_html_content = html_content.replace('<div id = "ordersummary"></div>', order_html)
@@ -242,13 +292,20 @@ class Server(BaseHTTPRequestHandler):
 
 
     def do_POST(self):
-        if self.path == "/updateOrderStatus":
+        
+        if self.path == "/updatestatus":
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data)
             print(data)
-            orderID = data.get('orderID')
-            status  = data.get('status')
+            orderID = data.get('OrderID')
+            status  = data.get('Status')
+            if status == 'Pending':
+                status = 1
+            elif status == 'Shipped':
+                status = 2
+            else:
+                status = 3
             practice.Orders.update_status(status, orderID)
 
         if self.path == "/insert":
@@ -309,6 +366,7 @@ class Server(BaseHTTPRequestHandler):
                 for product in product_data:
                     product = list(product)
                     product[1] = "Images/" + product[1]
+
                     if product[7] == 1:
                         product_html += f'''<tr><td data-column-name = 'ProductID'>{product[0]}</td>
                         <td ><img src="{product[1]}"></td>
@@ -320,10 +378,11 @@ class Server(BaseHTTPRequestHandler):
                         <td><button class = "edit-button">Edit</button></td>
                         <td><button class = "delete-button">Delete</button></td>
                         </tr>'''
+                    
                 with open('admin_product_table.html', 'r') as f:
                     html_content = f.read()
                 modified_html_content = html_content.replace('<div id = "product_table"></div>', product_html)
-                self.wfile.write(bytes(modified_html_content, encoding = 'utf-8'))
+                self.wfile.write(modified_html_content.encode('utf-8'))
                 return
             else:
                 #not logged in
