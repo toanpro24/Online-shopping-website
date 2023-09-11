@@ -1034,3 +1034,6 @@ order_details = [
 
 
 #Product.reset_identity_column()
+# results  = Product.read_all()
+# for result in results:
+#     Product.create(result[1], result[2], result[3], result[4], result[5], result[6], result[7])

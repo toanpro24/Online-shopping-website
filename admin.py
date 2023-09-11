@@ -42,45 +42,7 @@ class Server(BaseHTTPRequestHandler):
                 return cookies
         self.path = '/admin.html'
 
-    def add_product(picture_name, product_name, description, price, category_id, quantity):
-        success = practice.Product.create(picture_name, product_name, description, price, category_id, quantity)
-        if success:
-            print("Product added successfully!")
-        else:
-            print("Failed to add product.")
-  
-    def update_product(product_id, product_name, description, price, category_id, quantity):
-        
-        product = practice.Product.read(product_id)
-        if product:
-        
-            product.product_name = product_name
-            product.description = description
-            product.price = price
-            product.category_id = category_id
-            product.quantity = quantity
-
-            
-            success = product.update()
-            if success:
-                print("Product updated successfully!")
-            else:
-                print("Failed to update product.")
-        else:
-            print("Product not found.")
     
-    def delete_product(product_id):
-        product = practice.Product.read(product_id)
-        if product:
-
-            success = product.delete_by_id()
-            if success:
-                print("Product deleted successfully!")
-            else:
-                print("Failed to delete product.")
-        else:
-            print("Product not found.")
-
 
     def do_GET(self):
         if ".jpg" in self.path:
@@ -267,7 +229,7 @@ class Server(BaseHTTPRequestHandler):
             html_content = html_content.replace('<div id = "product_catalog"></div>', product_html)
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
-            self.end_headers()
+            self.end_headers ()
             self.wfile.write(html_content.encode('utf-8'))
             return
         try:

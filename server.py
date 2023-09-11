@@ -19,6 +19,7 @@ cursor = conn.cursor()
 
 
 class Server(BaseHTTPRequestHandler):
+    
     def do_login(self, username):
      ##-------###
         expiration_date = datetime.datetime.utcnow() + datetime.timedelta(days=7)
@@ -43,27 +44,52 @@ class Server(BaseHTTPRequestHandler):
                 return cookies
         self.path = '/index.html'
         
-    # def generateQuantityOptions(self, selectedQuantity) :
-    #     options = ''
-    #     for i in range(1,11):
-    #         if (i == selectedQuantity):
-    #             options += f"<option value='{i}' selected>{i}</option>"
-    #         else:
-    #             options += f"<option value='{i}'>{i}</option>"
-
-    #     return options
-    
-    # def updateQuantity(itemIndex, newQuantity):
-    #     cursor.execute("UPDATE Cart Set Quantity = %s WHERE ProductID = %s", (newQuantity, itemIndex))
-    #     cursor.execute("SELECT Price FROM Cart Where ProductID = %s", itemIndex)
-    #     item_price = cursor.fetchone()
-    #     new_subtotal_price = item_price * newQuantity
-    #     cursor.execute("UPDATE Cart SET SubtotalPrice = %s", new_subtotal_price)
-    #     conn.commit()
-
 
     def do_GET(self):
-        #handle picture
+        
+
+        
+        # if self.path.startswith("/get_paginated_data"):
+           
+        #     start_index = (page - 1) * items_per_page
+        #     end_index = start_index + items_per_page
+        #     cursor.execute("SELECT * FROM Product WHERE STATUS = 1")
+        #     products_data = cursor.fetchall()
+        #     products_data = products_data[start_index:end_index]
+        #     new_html = "<div class = 'content-container' id = 'contentContainer'><div id = 'row'>"
+        #     k = 0
+        #     for product in products_data:
+        #         product = list(product)
+        #         new_html += f"""
+        #                         <div class='element'>
+        #                             <a href = '/?ProductID={product[0]}' ><img src='Images/{product[1]}' alt= "{product[2]}" style='width:20%'></a>
+        #                             <a href = '/?ProductID={product[0]}'  style ='text-decoration: none;'><h2 class="a-size-base-plus a-color-base a-text-normal">{product[2]}</h2></a>
+        #                             <p class = 'price'>${product[4]}</p>      
+        #                         </div>
+        #                     """  
+        #         k += 1
+        #         if k == 5:
+        #             new_html += "</div><div id = 'row'>"
+        #             k = 0
+        #     new_html += "</div></div>"
+        #     cursor.execute("SELECT * FROM Categories")
+        #     categories_data = cursor.fetchall()
+        #     table_html = "<div style = 'width:110%'>"
+        #     for category in categories_data:
+        #         table_html += f"<a class = 'navbar' href='/?CategoryID={category[0]}'>{category[1]}</a>"
+        #     table_html += "</div>"
+        #     with open('index4.html', 'r') as f:
+        #         html_content = f.read()
+            
+        #     modified_html_content = table_html + new_html
+        #     modified_html_content = html_content.replace('<div id="page_container"></div>', modified_html_content)
+        #     # print(modified_html_content)
+        #     self.send_response(200)
+        #     self.send_header('Content-Type', 'text/html')
+        #     self.end_headers()
+        #     self.wfile.write(modified_html_content.encode('utf-8'))
+        #     return
+         #handle picture
         if ".jpg" in self.path:
             root_path = "C:/Users/phamc/OneDrive/Documents/Chú Nam"
             root_path += self.path
@@ -102,29 +128,27 @@ class Server(BaseHTTPRequestHandler):
                 table_html += f"<a class = 'navbar' href='/?CategoryID={category[0]}'>{category[1]}</a>"
             table_html += "</div>"
 
-            query = f"SELECT * FROM Product WHERE ProductName LIKE '%{search_term}%'"
+            query = f"SELECT * FROM Product WHERE ProductName LIKE '%{search_term}%' AND STATUS = 1"
             cursor.execute(query)
             search_results = cursor.fetchall()
             new_html = "<div class = 'content-container' id = 'contentContainer'><div id = 'row'>"
             k = 0
             for product in search_results:
                 product = list(product)
-                if product[7] == 1:
-                    new_html += f"""
-                                    <div class='element'>
-                                        <a href = '/?ProductID={product[0]}' ><img src='Images/{product[1]}' alt= "{product[2]}" style='width:20%'></a>
-                                        <a href = '/?ProductID={product[0]}'  style ='text-decoration: none;'><h2 class="a-size-base-plus a-color-base a-text-normal">{product[2]}</h2></a>
-                                        <p class = 'price'>${product[4]}</p>      
-                                    </div>
-                                """  
-                    k += 1
-                    if k == 5:
-                        new_html += "</div><div id = 'row'>"
-                        k = 0
+                new_html += f"""
+                                <div class='element'>
+                                    <a href = '/?ProductID={product[0]}' ><img src='Images/{product[1]}' alt= "{product[2]}" style='width:20%'></a>
+                                    <a href = '/?ProductID={product[0]}'  style ='text-decoration: none;'><h2 class="a-size-base-plus a-color-base a-text-normal">{product[2]}</h2></a>
+                                    <p class = 'price'>${product[4]}</p>      
+                                </div>
+                            """  
+                k += 1
+                if k == 5:
+                    new_html += "</div><div id = 'row'>"
+                    k = 0
             new_html += "</div></div>"  
             with open('index1.html', 'r') as f:
                 html_content = f.read()
-            print(new_html)
             modified_html_content = table_html + new_html
             modified_html_content = html_content.replace('<div id="new_container"></div>', modified_html_content)
             #print(modified_html_content)
@@ -176,38 +200,45 @@ class Server(BaseHTTPRequestHandler):
             # except Exception as e:
             #     print(f"Error sending email: {e}")
 
-        # if self.path == "/cart":
-        #     index = 0
-        #     cursor.execute("SELECT * FROM Cart")
-        #     cart_detail = cursor.fetchall()
-        #     print(cart_detail)
-        #     cart = ""
-        #     for tup in cart_detail:
-        #         index += 1
-        #         cart += f'''<tr><td>{index}</td>
-        #             <td><img src="{tup[2]}"></td>
-        #             <td>{tup[3]} <input type="button" value="Delete" onclick="deleteRow(this)"></td>
-        #             <td>
-        #                 <select onchange="updateQuantity({index - 1}, this.value)">{self.generateQuantityOptions(tup[4])}</select>
-        #             </td>
-        #             <td class="total-price-cell">${tup[6]}</td></tr>
-        #         '''
-        #     self.path = "/cart.html"
-        #     with open(self.path[1:], 'r') as f:
-        #         html_content = f.read()
-        #     modified_html_content = html_content.replace('<div id="cart-items"></div>', cart)
-        #     self.send_response(200)
-        #     self.end_headers()
-        #     self.wfile.write(bytes(modified_html_content, 'utf-8'))
+        if self.path == "/cart":
+            index = 0
+            cursor.execute("SELECT * FROM Cart")
+            cart_detail = cursor.fetchall()
+            print(cart_detail)
+            cart = ""
+            for tup in cart_detail:
+                index += 1
+                cart += f'''<tr><td>{index}</td>
+                    <td><img src="{tup[2]}"></td>
+                    <td>{tup[3]} <input type="button" value="Delete" onclick="deleteRow(this)"></td>
+                    <td>
+                        <select onchange="updateQuantity({index - 1}, this.value)">{self.generateQuantityOptions(tup[4])}</select>
+                    </td>
+                    <td class="total-price-cell">${tup[6]}</td></tr>
+                '''
+            self.path = "/cart.html"
+            with open(self.path[1:], 'r') as f:
+                html_content = f.read()
+            modified_html_content = html_content.replace('<div id="cart-items"></div>', cart)
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(bytes(modified_html_content, 'utf-8'))
             
-        #     return
+            return
 
             
         try:
             split_path = os.path.splitext(self.path)
             request_extension = split_path[1]
             if request_extension != ".py":
-                 
+                # print(self.path)
+                # total_products = practice.Product.read_all()  
+                # total_products = len(total_products)
+                # items_per_page = 20  
+                # response_data = {
+                #     "total_pages": total_pages,
+                # }
+                # total_pages = (total_products + items_per_page - 1) // items_per_page
                 #user profile page
                 if self.path.startswith('/profile/'):
                     username = self.path.split('/')[2]
@@ -315,7 +346,7 @@ class Server(BaseHTTPRequestHandler):
                             return
                         
                     #5 products in a row    
-                    product_html = "<div class = 'content-container' id = 'contentContainer'><div id = 'row'>"
+                    product_html = "<div class = 'content-container' id = 'productContainer'><div id = 'row'>"
                     index = 0
                     for product in products_data:
                         product_html += f"""
@@ -396,42 +427,42 @@ class Server(BaseHTTPRequestHandler):
     
     def do_POST(self):
         
-        # if self.path == "/addtocart":
-        #     content_length = int(self.headers['Content-Length'])
-        #     post_data = self.rfile.read(content_length)
-        #     data = json.loads(post_data)
-        #     product_id = data.get('ProductID')
-        #     product_name = data.get('ProductName')
-        #     product_picture = data.get('PictureName')
-        #     product_price = data.get('ProductPrice')
-        #     product_quantity = data.get('Quantity')
-        #     username = data.get('Username')
+        if self.path == "/addtocart":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+            product_id = data.get('ProductID')
+            product_name = data.get('ProductName')
+            product_picture = data.get('PictureName')
+            product_price = data.get('ProductPrice')
+            product_quantity = data.get('Quantity')
+            username = data.get('Username')
 
-        #     cursor.execute("SELECT CustomerID from Customer WHERE Username = %s", username)
-        #     row = cursor.fetchone()
-        #     customer_id = row[0]
-        #     product_id = int(product_id)
-        #     cursor.execute("SELECT * FROM Cart")
-        #     cart_data = cursor.fetchall()
+            cursor.execute("SELECT CustomerID from Customer WHERE Username = %s", username)
+            row = cursor.fetchone()
+            customer_id = row[0]
+            product_id = int(product_id)
+            cursor.execute("SELECT * FROM Cart")
+            cart_data = cursor.fetchall()
             
-        #     if cart_data:
-        #         for dic in cart_data:
-        #             dic = list(dic)
-        #             dic[1] = int(dic[1])
-        #             if product_id == dic[1]:
-        #                 dic[4] += 1 
-        #                 subtotal_price = product_price * dic[4]
-        #                 cursor.execute("UPDATE Cart SET Quantity = %s, SubtotalPrice = %s WHERE ProductID = %s", (dic[4], subtotal_price, product_id))
-        #                 conn.commit()
-        #                 return
-        #         product_quantity = 1
-        #         cursor.execute("INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, Price, SubtotalPrice) VALUES(%s, %s, %s, %s, %s, %s, %s)", (customer_id, product_id, product_picture, product_name, product_quantity, product_price, product_price))
-        #         conn.commit()
-        #         return
-        #     else:
-        #         cursor.execute("INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, Price, SubtotalPrice) VALUES(%s, %s, %s, %s, %s, %s, %s)", (customer_id, product_id, product_picture, product_name, product_quantity, product_price, product_price))
-        #         conn.commit()
-        #         return 
+            if cart_data:
+                for dic in cart_data:
+                    dic = list(dic)
+                    dic[1] = int(dic[1])
+                    if product_id == dic[1]:
+                        dic[4] += 1 
+                        subtotal_price = product_price * dic[4]
+                        cursor.execute("UPDATE Cart SET Quantity = %s, SubtotalPrice = %s WHERE ProductID = %s", (dic[4], subtotal_price, product_id))
+                        conn.commit()
+                        return
+                product_quantity = 1
+                cursor.execute("INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, Price, SubtotalPrice) VALUES(%s, %s, %s, %s, %s, %s, %s)", (customer_id, product_id, product_picture, product_name, product_quantity, product_price, product_price))
+                conn.commit()
+                return
+            else:
+                cursor.execute("INSERT INTO Cart (CustomerID, ProductID, PictureName, ProductName, Quantity, Price, SubtotalPrice) VALUES(%s, %s, %s, %s, %s, %s, %s)", (customer_id, product_id, product_picture, product_name, product_quantity, product_price, product_price))
+                conn.commit()
+                return 
 
             
         #get username and password 

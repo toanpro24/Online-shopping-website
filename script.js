@@ -13,7 +13,13 @@ document.querySelectorAll(".add-to-cart-btn").forEach((button) => {
         data['ProductPrice'] = productPrice;
         data['Quantity'] = 1;
         data['Username'] = username
-        
+        fetch("/addtocart", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json', 
+            },
+            body: JSON.stringify(data),
+        });
         addToCart(productId, productPicture, productName, productPrice, username);
         updateCartCount();
         
@@ -88,48 +94,38 @@ function getCookie(name) {
     for (let i = 0; i < cookieArray.length; i++) {
         let cookie = cookieArray[i];
         while (cookie.charAt(0) === ' ') {
-        cookie = cookie.substring(1);
+            cookie = cookie.substring(1);
         }
         if (cookie.indexOf(cookieName) === 0) {
-        return cookie.substring(cookieName.length, cookie.length);
+            return cookie.substring(cookieName.length, cookie.length);
         }
     }
     return null;
 }
 
-const itemsPerPage = 5;  
-const data = [
-    "Item 1", "Item 2", "Item 3", "Item 4", "Item 5",
-    "Item 6", "Item 7", "Item 8", "Item 9", "Item 10",
-];
 
-const contentContainer = document.getElementById("contentContainer");
-const pagination = document.getElementById("pagination");
+const buttonsContainer = document.getElementById("buttons");
+function updateButtons(totalPages) {
+    buttonsContainer.innerHTML = ""; 
 
-function displayItems(pageNumber) {
-    const startIndex = (pageNumber - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const itemsToDisplay = data.slice(startIndex, endIndex);
-
-    contentContainer.innerHTML = "";
-    itemsToDisplay.forEach(item => {
-        const itemElement = document.createElement("div");
-        itemElement.textContent = item;
-        contentContainer.appendChild(itemElement);
-    });
-}
-
-function createPaginationButtons() {
-    const pageCount = Math.ceil(data.length / itemsPerPage);
-    for (let i = 1; i <= pageCount; i++) {
+    for (let i = 1; i <= totalPages; i++) {
         const button = document.createElement("button");
         button.textContent = i;
         button.addEventListener("click", () => {
-            displayItems(i);
+            loadPage(i);
         });
-        pagination.appendChild(button);
+        buttonsContainer.appendChild(button);
     }
 }
+function loadPage(pageNumber) {
+    data = {};
+    data['pagenumber'] = pageNumber;
+    const queryString = encodeURIComponent(JSON.stringify(data));
+    fetch(`/get_paginated_data?page=${queryString}`, {
+        method: 'GET',
+    });
+    location.href = `/get_paginated_data?page=${queryString}`;
+    updateButtons(pageNumber);
+}
 
-displayItems(1);  // Display initial page
-createPaginationButtons();
+
