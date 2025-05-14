@@ -19,7 +19,7 @@ This is a full-stack e-commerce website where users can browse products, view de
 
 ### 🗃️ Database – MySQL
 
-Relational schema with foreign keys for categories and products.
+Relational schema with foreign keys for users, orders, order details, categories and products.
 
 ---
 
